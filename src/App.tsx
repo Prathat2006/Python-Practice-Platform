@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, FileCode2, Link as LinkIcon, Loader2, CheckCircle2, XCircle, Send, Clock, Trophy } from 'lucide-react';
+import { Play, FileCode2, Link as LinkIcon, Loader2, CheckCircle2, XCircle, Send, Clock, Trophy, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import Editor from 'react-simple-code-editor';
@@ -45,6 +45,85 @@ export default function App() {
   const [timerMode, setTimerMode] = useState<string>('Auto');
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
+  const [hasSave, setHasSave] = useState(false);
+  const [hasAlertedSaveError, setHasAlertedSaveError] = useState(false);
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [llmProvider, setLlmProvider] = useState<string>('Google Gemini');
+  const [byokKey, setByokKey] = useState<string>('');
+  const [customModel, setCustomModel] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('python_practice_save')) {
+        setHasSave(true);
+      }
+      const savedSettings = JSON.parse(localStorage.getItem('python_practice_settings') || '{}');
+      if (savedSettings.provider) setLlmProvider(savedSettings.provider);
+      if (savedSettings.key) setByokKey(savedSettings.key);
+      if (savedSettings.model) setCustomModel(savedSettings.model);
+    } catch (e) {
+      // Ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('python_practice_settings', JSON.stringify({
+        provider: llmProvider,
+        key: byokKey,
+        model: customModel
+      }));
+    } catch (e) {}
+  }, [llmProvider, byokKey, customModel]);
+
+  const handleResume = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('python_practice_save') || '{}');
+      if (saved && saved.problems) {
+        setProblems(saved.problems);
+        setCodes(saved.codes || []);
+        setTestResults(saved.testResults || {});
+        setCurrentIndex(saved.currentIndex || 0);
+        setTimeRemaining(saved.timeRemaining);
+        setSessionEnded(saved.sessionEnded || false);
+        setDifficulty(saved.difficulty || 'Easy');
+        setUrl(saved.url || '');
+        setNumQuestions(saved.numQuestions || 3);
+        setTimerMode(saved.timerMode || 'Auto');
+        setDraftCode(saved.codes && saved.codes.length > (saved.currentIndex || 0) ? saved.codes[saved.currentIndex || 0] : '');
+      }
+    } catch (err) {
+      alert("Failed to load saved session");
+    }
+  };
+
+  useEffect(() => {
+    if (problems) {
+      try {
+        const stateToSave = {
+          problems,
+          codes: codes.map((c, i) => i === currentIndex ? draftCode : c),
+          testResults,
+          currentIndex,
+          timeRemaining,
+          sessionEnded,
+          difficulty,
+          url,
+          numQuestions,
+          timerMode
+        };
+        localStorage.setItem('python_practice_save', JSON.stringify(stateToSave));
+        setHasSave(true);
+      } catch (err) {
+        console.error("Auto-save failed:", err);
+        if (!hasAlertedSaveError) {
+          alert("Auto-save failed! Your progress might not be saved. This may be due to private browsing restrictions or lack of storage space.");
+          setHasAlertedSaveError(true);
+        }
+      }
+    }
+  }, [problems, codes, draftCode, testResults, currentIndex, timeRemaining, sessionEnded, difficulty, url, numQuestions, timerMode, hasAlertedSaveError]);
 
   const calculateInitialTime = (diff: string, qs: number, mode: string) => {
     if (mode === 'Auto') {
@@ -109,7 +188,7 @@ export default function App() {
       setProblems(null);
       setSessionEnded(false);
       setTimeRemaining(calculateInitialTime(difficulty, targetQ, timerMode));
-      const data = await fetchAndGenerateProblems(targetUrl, targetQ, difficulty, setProgressMsg);
+      const data = await fetchAndGenerateProblems(targetUrl, targetQ, difficulty, setProgressMsg, llmProvider, byokKey, customModel);
       setProblems(data);
       const initialCodes = data.map(d => d.initialCode);
       setCodes(initialCodes);
@@ -233,12 +312,87 @@ export default function App() {
           </button>
         </form>
 
-        <div className="flex items-center gap-4 hidden lg:flex w-48 shrink-0 justify-end">
+        <div className="flex items-center gap-4 hidden lg:flex shrink-0 justify-end">
           <div className="flex items-center gap-2 text-[10px] text-gray-500 uppercase tracking-widest">
             <span className="w-2 h-2 rounded-full bg-green-500"></span> Local AI Active
           </div>
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="text-gray-500 hover:text-gray-300 transition-colors"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
       </nav>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#11141b] border border-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full relative">
+            <button 
+              onClick={() => setShowSettings(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-300"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <Settings className="w-5 h-5" /> AI Settings
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Provider</label>
+                <select 
+                  value={llmProvider}
+                  onChange={(e) => setLlmProvider(e.target.value)}
+                  className="w-full bg-[#1a1d23] border border-gray-700 text-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                >
+                  <option value="Google Gemini">Google Gemini</option>
+                  <option value="OpenRouter">OpenRouter</option>
+                  <option value="NVIDIA NIM">NVIDIA NIM</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">
+                  API Key (BYOK)
+                  {llmProvider === 'Google Gemini' && " (Optional - uses server default if empty)"}
+                </label>
+                <input 
+                  type="password"
+                  value={byokKey}
+                  onChange={(e) => setByokKey(e.target.value)}
+                  placeholder={llmProvider === 'Google Gemini' ? "Leave empty to use env default" : "sk-..."}
+                  className="w-full bg-[#1a1d23] border border-gray-700 text-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">
+                  Custom Model ID (Optional)
+                </label>
+                <input 
+                  type="text"
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                  placeholder={llmProvider === 'NVIDIA NIM' ? "meta/llama-3.1-70b-instruct" : llmProvider === 'OpenRouter' ? "meta-llama/llama-3.1-70b-instruct" : "gemini-3.1-pro-preview"}
+                  className="w-full bg-[#1a1d23] border border-gray-700 text-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <p className="text-[10px] text-gray-500 leading-tight">
+                Keys are stored locally in your browser's localStorage. 
+                Using third-party APIs may incur costs to your account.
+              </p>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="bg-blue-600 text-white rounded px-5 py-2 text-sm font-medium hover:bg-blue-700 transition"
+              >
+                Save & Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">
@@ -255,6 +409,15 @@ export default function App() {
                 <h2 className="text-xl font-semibold text-white mb-2 shrink-0">Paste a URL to generate a challenge test</h2>
                 <p className="text-xs text-gray-500 max-w-md shrink-0 mb-8">Our AI extracts content from coding tutorials and instantly generates custom practice tests. Select the number of questions and difficulty level above.</p>
                 
+                {hasSave && (
+                  <button
+                    onClick={handleResume}
+                    className="bg-blue-600/20 text-blue-400 border border-blue-500/50 px-5 py-2.5 rounded font-medium hover:bg-blue-600/30 transition-colors flex items-center justify-center gap-2 mb-8"
+                  >
+                    <Clock className="w-4 h-4" /> Resume Previous Session
+                  </button>
+                )}
+
                 <div className="w-full max-w-4xl text-left">
                   <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Recommended Practice Sets</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -441,24 +604,32 @@ export default function App() {
                   </div>
                   
                   {/* Editor Body */}
-                  <div className="flex-1 font-mono text-[13px] leading-relaxed overflow-hidden relative">
-                    <Editor
-                      value={draftCode}
-                      onValueChange={setDraftCode}
-                      highlight={c => highlight(c, languages.python, 'python')}
-                      padding={16}
-                      disabled={sessionEnded || timeRemaining === 0}
-                      className={cn("min-h-full w-full h-full custom-scrollbar overflow-y-auto outline-none border-none focus:outline-none", (sessionEnded || timeRemaining === 0) ? "opacity-75" : "")}
-                      textareaClassName="focus:outline-none focus:border-none focus:ring-0"
-                      style={{
-                        fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace',
-                        backgroundColor: 'transparent',
-                        outline: 'none',
-                      }}
-                    />
-                    {(sessionEnded || timeRemaining === 0) && (
-                       <div className="absolute inset-0 bg-black/10 z-10 flex items-center justify-center backdrop-blur-[1px]"></div>
-                    )}
+                  <div className="flex-1 overflow-y-auto custom-scrollbar relative flex bg-[#0a0c10] items-stretch">
+                    <div className="w-10 bg-gray-900/50 border-r border-gray-800 text-gray-600 font-mono text-[13px] pt-4 pb-4 px-2 text-right flex-shrink-0 select-none">
+                      {draftCode.split('\n').map((_, i) => (
+                        <div key={i} className="leading-relaxed">{i + 1}</div>
+                      ))}
+                    </div>
+                    <div className="flex-1 font-mono text-[13px] leading-relaxed relative min-h-full overflow-x-auto custom-scrollbar">
+                      <Editor
+                        value={draftCode}
+                        onValueChange={setDraftCode}
+                        highlight={c => highlight(c, languages.python, 'python')}
+                        padding={{ top: 16, right: 16, bottom: 16, left: 12 }}
+                        disabled={sessionEnded || timeRemaining === 0}
+                        className={cn("min-h-full min-w-full outline-none border-none focus:outline-none whitespace-pre", (sessionEnded || timeRemaining === 0) ? "opacity-75" : "")}
+                        textareaClassName="focus:outline-none focus:border-none focus:ring-0 whitespace-pre"
+                        style={{
+                          fontFamily: '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace',
+                          backgroundColor: 'transparent',
+                          outline: 'none',
+                          whiteSpace: 'pre',
+                        }}
+                      />
+                      {(sessionEnded || timeRemaining === 0) && (
+                         <div className="absolute inset-0 bg-black/10 z-10 flex items-center justify-center backdrop-blur-[1px]"></div>
+                      )}
+                    </div>
                   </div>
                 </Panel>
                 
