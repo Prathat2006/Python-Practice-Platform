@@ -10,6 +10,7 @@ import 'prismjs/components/prism-python';
 import { cn } from './lib/utils';
 import { fetchAndGenerateProblems } from './lib/gemini';
 import { runPythonCode, type ProblemData, type TestResult } from './lib/pythonRunner';
+import { quiz1Problems } from './lib/quiz1';
 
 const ResizeHandle = () => (
   <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-blue-600 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
@@ -80,6 +81,28 @@ export default function App() {
     const targetUrl = overrideUrl || url;
     const targetQ = overrideNumQ || numQuestions;
     if (!targetUrl) return;
+
+    if (targetUrl === 'quiz1') {
+      try {
+        setLoading(true);
+        setTestResults({});
+        setProblems(null);
+        setSessionEnded(false);
+        setTimeRemaining(calculateInitialTime(difficulty, targetQ, timerMode));
+        
+        setProblems(quiz1Problems);
+        const initialCodes = quiz1Problems.map(d => d.initialCode || "");
+        setCodes(initialCodes);
+        setCurrentIndex(0);
+        setDraftCode(initialCodes[0] || "");
+      } catch (err: any) {
+        alert(err.message || "Failed to load quiz");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setLoading(true);
       setTestResults({});
@@ -236,6 +259,7 @@ export default function App() {
                   <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Recommended Practice Sets</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
+                      { title: "Quiz 1 Practice Set", url: "quiz1", q: 13 },
                       { title: "Python Pandas DataFrame", url: "https://www.w3resource.com/python-exercises/pandas/index-dataframe.php", q: 15 },
                       { title: "Python Pandas Data Series", url: "https://www.w3resource.com/python-exercises/pandas/index-data-series.php", q: 15 },
                       { title: "Pandas Joining & Merging", url: "https://www.w3resource.com/python-exercises/pandas/joining-and-merging/index.php", q: 15 },
@@ -338,7 +362,7 @@ export default function App() {
                   <span className={cn("text-[10px] px-2 py-0.5 rounded border uppercase font-medium", difficulty === 'Easy' ? "bg-green-900/30 text-green-400 border-green-800/50" : difficulty === 'Medium' ? "bg-yellow-900/30 text-yellow-400 border-yellow-800/50" : "bg-red-900/30 text-red-400 border-red-800/50")}>
                     {difficulty}
                   </span>
-                  {problem.topics.slice(0,3).map(topic => (
+                  {(problem.topics || []).slice(0,3).map(topic => (
                     <span key={topic} className="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700 uppercase font-medium">
                       {topic}
                     </span>

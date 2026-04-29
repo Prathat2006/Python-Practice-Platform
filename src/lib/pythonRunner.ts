@@ -7,10 +7,10 @@ export interface TestCase {
 
 export interface ProblemData {
   title: string;
-  topics: string[];
+  topics?: string[];
   description: string;
-  initialCode: string;
-  solutionCode: string;
+  initialCode?: string;
+  solutionCode?: string;
   testCases: TestCase[];
 }
 

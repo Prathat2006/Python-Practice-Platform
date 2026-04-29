@@ -10,9 +10,9 @@ export async function fetchAndGenerateProblems(url: string, numQuestions: number
   const ai = new GoogleGenAI({ apiKey });
 
   let contentToProcess = "";
-  if (cachedUrls && url in cachedUrls) {
+  if (cachedUrls && url in cachedUrls && (cachedUrls as any)[url]) {
     onProgress("Using cached content for URL...");
-    contentToProcess = (cachedUrls as any)[url].slice(0, 500000);
+    contentToProcess = String((cachedUrls as any)[url]).slice(0, 500000);
   } else {
     onProgress("Fetching content from URL...");
     const response = await fetch("/api/fetch-url", {
@@ -27,7 +27,7 @@ export async function fetchAndGenerateProblems(url: string, numQuestions: number
     }
 
     const { text } = await response.json();
-    contentToProcess = text.slice(0,500000); 
+    contentToProcess = String(text || "").slice(0, 500000); 
   }
 
   onProgress(`Analyzing and extracting ${numQuestions} ${difficulty} problems...`);
