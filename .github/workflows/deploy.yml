@@ -26,31 +26,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          cache: npm
 
-      # 🔥 FIX for Tailwind / npm optional dependency bug
-      - name: Clean install dependencies
+      # 🔥 CRITICAL FIX: Tailwind native binding bug
+      - name: Install dependencies (fixed)
         run: |
-          npm cache clean --force
-          rm -rf node_modules package-lock.json
-          npm install
+          npm config set optional true
+          npm install --include=optional --force
 
       - name: Build project
         run: npm run build
 
-      # ✅ Upload ONLY dist folder
-      - name: Upload build artifacts
+      # ✅ Upload ONLY dist (important)
+      - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
-    needs: build
-    runs-on: ubuntu-latest
 
     steps:
       - name: Deploy to GitHub Pages
