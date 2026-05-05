@@ -3,7 +3,7 @@ import type { ProblemData } from "./pythonRunner";
 import cachedUrls from "./cached_urls.json";
 
 export async function fetchAndGenerateProblems(
-  url: string, 
+  url: string | string[], 
   numQuestions: number, 
   difficulty: string, 
   onProgress: (msg: string) => void,
@@ -21,25 +21,32 @@ export async function fetchAndGenerateProblems(
   }
 
   let contentToProcess = "";
-  if (cachedUrls && url in cachedUrls && (cachedUrls as any)[url]) {
-    onProgress("Using cached content for URL...");
-    contentToProcess = String((cachedUrls as any)[url]).slice(0, 500000);
-  } else {
-    onProgress("Fetching content from URL...");
-    const response = await fetch("/api/fetch-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to fetch URL");
-    }
+  const urls = Array.isArray(url) ? url : [url];
+  
+  for (const u of urls) {
+    if (cachedUrls && u in cachedUrls && (cachedUrls as any)[u]) {
+      onProgress(urls.length > 1 ? `Using cached content for ${u.substring(0, 30)}...` : "Using cached content for URL...");
+      contentToProcess += String((cachedUrls as any)[u]).slice(0, 500000) + "\n\n";
+    } else {
+      onProgress(urls.length > 1 ? `Fetching content from ${u.substring(0, 30)}...` : "Fetching content from URL...");
+      const response = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u }),
+      });
+      
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Failed to fetch URL: ${u}`);
+      }
 
-    const { text } = await response.json();
-    contentToProcess = String(text || "").slice(0, 500000); 
+      const { text } = await response.json();
+      contentToProcess += String(text || "").slice(0, 500000) + "\n\n"; 
+    }
   }
+
+  // To avoid exceeding payload limits or context limits slightly, cap the combined content
+  contentToProcess = contentToProcess.slice(0, 1000000);
 
   onProgress(`Analyzing and extracting ${numQuestions} ${difficulty} problems using ${llmProvider}...`);
   

@@ -11,6 +11,9 @@ import { cn } from './lib/utils';
 import { fetchAndGenerateProblems } from './lib/gemini';
 import { runPythonCode, type ProblemData, type TestResult } from './lib/pythonRunner';
 import { quiz1Problems } from './lib/quiz1';
+import { masterQuizProblems } from './lib/master_quiz';
+import { mcqQuizzes } from './lib/mcqQuizzes';
+import { MCQSection } from './components/MCQSection';
 
 const ResizeHandle = () => (
   <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-blue-600 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
@@ -52,6 +55,8 @@ export default function App() {
   const [llmProvider, setLlmProvider] = useState<string>('Google Gemini');
   const [byokKey, setByokKey] = useState<string>('');
   const [customModel, setCustomModel] = useState<string>('');
+
+  const [appMode, setAppMode] = useState<'coding' | 'mcq'>('coding');
 
   useEffect(() => {
     try {
@@ -155,7 +160,7 @@ export default function App() {
     }
   }, [currentIndex, problems, codes]);
 
-  const handleGenerate = async (e?: React.FormEvent, overrideUrl?: string, overrideNumQ?: number) => {
+  const handleGenerate = async (e?: React.FormEvent, overrideUrl?: string | string[], overrideNumQ?: number) => {
     if (e) e.preventDefault();
     const targetUrl = overrideUrl || url;
     const targetQ = overrideNumQ || numQuestions;
@@ -182,12 +187,41 @@ export default function App() {
       return;
     }
 
+    if (targetUrl === 'master-quiz') {
+      try {
+        setLoading(true);
+        setTestResults({});
+        setProblems(null);
+        setSessionEnded(false);
+        // Master quiz always gives 3 hours
+        setTimeRemaining(3 * 60 * 60);
+
+        setProblems(masterQuizProblems);
+        const initialCodes = masterQuizProblems.map(d => d.initialCode || "");
+        setCodes(initialCodes);
+        setCurrentIndex(0);
+        setDraftCode(initialCodes[0] || "");
+        setActiveTab('problem');
+      } catch (err: any) {
+        alert(err.message || "Failed to load master quiz");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setLoading(true);
       setTestResults({});
       setProblems(null);
       setSessionEnded(false);
-      setTimeRemaining(calculateInitialTime(difficulty, targetQ, timerMode));
+      
+      let timerVal = calculateInitialTime(difficulty, targetQ, timerMode);
+      if (Array.isArray(targetUrl)) {
+        timerVal = 3 * 60 * 60; // 3 hours limit for master quiz
+      }
+      setTimeRemaining(timerVal);
+
       const data = await fetchAndGenerateProblems(targetUrl, targetQ, difficulty, setProgressMsg, llmProvider, byokKey, customModel);
       setProblems(data);
       const initialCodes = data.map(d => d.initialCode);
@@ -248,14 +282,30 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen w-full bg-[#0d0f14] text-gray-300 font-sans">
       <nav className="h-12 border-b border-gray-800 flex items-center px-4 justify-between bg-[#11141b] shrink-0">
-        <div className="flex items-center gap-3 w-64 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 mr-4">
           <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center font-bold text-xs text-white">
             P
           </div>
-          <span className="text-sm font-semibold tracking-tight hidden sm:block">PYTHON PRACTICE LOCAL</span>
+          <div className="flex bg-[#1a1d23] rounded-md border border-gray-800 p-0.5">
+            <button 
+              type="button"
+              onClick={() => setAppMode('coding')}
+              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'coding' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+            >
+              Coding
+            </button>
+            <button 
+              type="button"
+              onClick={() => setAppMode('mcq')}
+              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'mcq' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+            >
+              MCQ
+            </button>
+          </div>
         </div>
         
-        <form id="extractor-form" onSubmit={handleGenerate} className="flex-1 max-w-4xl px-2 flex gap-2">
+        {appMode === 'coding' && (
+          <form id="extractor-form" onSubmit={handleGenerate} className="flex-1 max-w-4xl px-2 flex gap-2">
           <div className="flex h-8 bg-[#1a1d23] border border-gray-700 rounded-md overflow-hidden flex-1">
             <div className="flex items-center px-3 text-gray-500 bg-gray-800/30">
               <LinkIcon className="w-3 h-3" />
@@ -311,6 +361,7 @@ export default function App() {
             )}
           </button>
         </form>
+        ) || <div className="flex-1" />}
 
         <div className="flex items-center gap-4 hidden lg:flex shrink-0 justify-end">
           <div className="flex items-center gap-2 text-[10px] text-gray-500 uppercase tracking-widest">
@@ -394,6 +445,9 @@ export default function App() {
         </div>
       )}
 
+      {appMode === 'mcq' ? (
+        <MCQSection />
+      ) : (
       <main className="flex flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">
           {!problems && !loading && (
@@ -422,6 +476,11 @@ export default function App() {
                   <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Recommended Practice Sets</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
+                      { 
+                        title: "Master Quiz (3 Hours)", 
+                        url: "master-quiz",
+                        q: 13
+                      },
                       { title: "Quiz 1 Practice Set", url: "quiz1", q: 13 },
                       { title: "Python Pandas DataFrame", url: "https://www.w3resource.com/python-exercises/pandas/index-dataframe.php", q: 15 },
                       { title: "Python Pandas Data Series", url: "https://www.w3resource.com/python-exercises/pandas/index-data-series.php", q: 15 },
@@ -432,14 +491,18 @@ export default function App() {
                       <button
                         key={i}
                         onClick={() => {
-                          setUrl(preset.url);
+                          if (typeof preset.url === "string") {
+                            setUrl(preset.url);
+                          } else {
+                            setUrl('master-quiz');
+                          }
                           setNumQuestions(preset.q);
                           handleGenerate(undefined, preset.url, preset.q);
                         }}
                         className="bg-[#1a1d23] hover:bg-gray-800 border border-gray-800 hover:border-gray-700 p-4 rounded-lg text-left transition-colors flex flex-col group"
                       >
                         <span className="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-colors mb-1 truncate">{preset.title}</span>
-                        <span className="text-[10px] text-gray-500 truncate">{preset.url}</span>
+                        <span className="text-[10px] text-gray-500 truncate">{typeof preset.url === 'string' ? preset.url : 'Master Collection of URLs'}</span>
                         <div className="mt-4 flex items-center gap-2">
                            <span className="text-[10px] bg-gray-900 px-2 py-0.5 rounded text-gray-400">{preset.q} Questions</span>
                            <span className="text-[10px] bg-blue-900/20 px-2 py-0.5 rounded text-blue-400 font-medium ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -776,6 +839,7 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+      )}
     </div>
   );
 }
