@@ -7,7 +7,8 @@ export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
   
   let currentQ: string[] = [];
   let options: string[] = [];
-  let correctIndex = 0;
+  let correctIndex: number | number[] | null = null;
+  let correctText: string | null = null;
   let explanation = "";
   
   let state: 'title' | 'question' | 'options' | 'answer' | 'explanation' | 'idle' = 'idle';
@@ -28,41 +29,61 @@ export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
       continue;
     }
 
-    if (line.startsWith('**Question')) {
-      if (currentQ.length > 0 && options.length > 0) {
+    if (line.startsWith('**Question') || line.startsWith('**Q') || line.match(/^\*\*\d+\.\*\*/)) {
+      if (currentQ.length > 0 && (options.length > 0 || correctText !== null)) {
+        const qText = currentQ.join('\n').trim();
+        const isMultipleChoice = qText.toLowerCase().includes('select all that apply') || (Array.isArray(correctIndex) && correctIndex.length > 1);
+        
         questions.push({
-          question: currentQ.join('\n').trim(),
+          question: qText,
           options: [...options],
-          correctOptionIndex: correctIndex,
-          explanation: explanation.trim()
+          correctOptionIndex: correctIndex ?? undefined,
+          correctText: correctText ?? undefined,
+          explanation: explanation.trim(),
+          isMultipleChoice,
+          type: correctText !== null ? 'text' : 'mcq'
         });
       }
       currentQ = [];
       options = [];
-      correctIndex = 0;
+      correctIndex = null;
+      correctText = null;
       explanation = "";
       state = 'question';
       continue;
     }
 
-    const optMatch = line.match(/^[\*\-]\s+\*\*([A-D])\*\*\s*(.*)/i) || 
-                     line.match(/^[\*\-]\s+([A-D])[\.\)]\s*(.*)/i) ||
-                     line.match(/^([A-D])[\.\)]\s*(.*)/i) ||
-                     line.match(/^\*\*([A-D])\*\*\s*(.*)/i);
-    if (optMatch) {
+    const optMatch = line.match(/^[\*\-]\s+\*\*([A-G])\*\*\s*(.*)/i) || 
+                     line.match(/^[\*\-]\s+([A-G])[\.\)]\s*(.*)/i) ||
+                     line.match(/^([A-G])[\.\)]\s*(.*)/i) ||
+                     line.match(/^\*\*([A-G])\*\*\s*(.*)/i);
+    if (optMatch && state !== 'explanation' && state !== 'answer') {
       state = 'options';
       options.push(optMatch[2].trim());
       continue;
     }
 
-    const ansMatch = line.match(/\*\*Answer:\*\*\s*([A-D])/i) || line.match(/Answer:\s*([A-D])/i) || line.match(/^\*\*([A-D])\*\*\s+is the correct/i);
-    if (ansMatch) {
+    const ansLabelMatch = line.match(/^\*\*Answer:\*\*\s*(.*)/i) || line.match(/^Answer:\s*(.*)/i);
+    if (ansLabelMatch) {
       state = 'answer';
-      correctIndex = ansMatch[1].toUpperCase().charCodeAt(0) - 65;
+      const ansVal = ansLabelMatch[1].trim();
+      
+      // Check if it's a simple A/B/C/D or A, B, D
+      const choiceMatch = ansVal.match(/^[A-G](?:\s*,\s*[A-G])*$/i);
+      if (choiceMatch) {
+          if (ansVal.includes(',') || ansVal.length > 1) {
+              correctIndex = ansVal.split(/[, ]+/).filter(Boolean).map(a => a.toUpperCase().charCodeAt(0) - 65);
+          } else {
+              correctIndex = ansVal.toUpperCase().charCodeAt(0) - 65;
+          }
+      } else {
+          // If it doesn't match A/B/C pattern, it's text
+          correctText = ansVal;
+      }
       continue;
     }
 
-    const expMatch = line.match(/\*\*Explanation:\*\*\s*(.*)/i) || line.match(/Explanation:\s*(.*)/i);
+    const expMatch = line.match(/\*\*Explanation:\*\*\s*(.*)/i) || line.match(/Explanation:\s*(.*)/i) || line.match(/^\*\*Solution:\*\*\s*(.*)/i);
     if (expMatch) {
       state = 'explanation';
       explanation = expMatch[1] + ' ';
@@ -74,18 +95,24 @@ export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
     } else if (state === 'explanation') {
       explanation += line + ' ';
     } else if (state === 'options') {
-      if (options.length > 0 && !line.match(/^[\*\-]\s/) && !line.match(/^([A-D])[\.\)]/i) && !line.match(/^\*\*([A-D])\*\*/i)) {
+      if (options.length > 0 && !line.match(/^[\*\-]\s/) && !line.match(/^([A-G])[\.\)]/i) && !line.match(/^\*\*([A-G])\*\*/i)) {
         options[options.length - 1] += ' ' + line;
       }
     }
   }
 
-  if (currentQ.length > 0 && options.length > 0) {
+  if (currentQ.length > 0 && (options.length > 0 || correctText !== null)) {
+    const qText = currentQ.join('\n').trim();
+    const isMultipleChoice = qText.toLowerCase().includes('select all that apply') || (Array.isArray(correctIndex) && (correctIndex as number[]).length > 1);
+    
     questions.push({
-      question: currentQ.join('\n').trim(),
+      question: qText,
       options: [...options],
-      correctOptionIndex: correctIndex,
-      explanation: explanation.trim()
+      correctOptionIndex: correctIndex ?? undefined,
+      correctText: correctText ?? undefined,
+      explanation: explanation.trim(),
+      isMultipleChoice,
+      type: correctText !== null ? 'text' : 'mcq'
     });
   }
 

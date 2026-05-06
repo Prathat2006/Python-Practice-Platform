@@ -7,8 +7,11 @@ import rfMd from './quizzes/random_forests.md?raw';
 export type MCQProblem = {
   question: string;
   options: string[];
-  correctOptionIndex: number;
+  correctOptionIndex?: number | number[];
+  correctText?: string;
   explanation?: string;
+  isMultipleChoice?: boolean;
+  type?: 'mcq' | 'text';
 };
 
 export type MCQQuiz = {
