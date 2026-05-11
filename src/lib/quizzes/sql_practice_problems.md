@@ -1,13 +1,14 @@
 ### SQL Practice: Movie Streaming Database
 
+**Database Schema:**
+- `movies` (id, title, genre, release_year, imdb_rating, duration_mins)
+- `users` (id, username, subscription_tier, signup_date)
+- `watch_history` (watch_id, user_id, movie_id, completion_pct, watch_date)
+
+---
+
 **Question 1**
-**Schema Context:**
-```sql
-movies (id, title, genre, release_year, imdb_rating, duration_mins)
-users (id, username, subscription_tier, signup_date)
-watch_history (watch_id, user_id, movie_id, completion_pct, watch_date)
-```
-Display all movies.
+Display all columns and all rows from the `movies` table.
 
 **Answer:** SELECT * FROM movies;
 **Explanation:** Use the asterisk (*) to select all columns from the movies table.
@@ -15,7 +16,7 @@ Display all movies.
 ---
 
 **Question 2**
-Show only `title` and `genre` from movies.
+Show only `title` and `genre` columns from the `movies` table.
 
 **Answer:** SELECT title, genre FROM movies;
 **Explanation:** Specify the columns you want to retrieve before the FROM clause.
@@ -23,7 +24,7 @@ Show only `title` and `genre` from movies.
 ---
 
 **Question 3**
-List all Premium users.
+List all users whose `subscription_tier` is 'Premium'.
 
 **Answer:** SELECT * FROM users WHERE subscription_tier = 'Premium';
 **Explanation:** Use the WHERE clause to filter users by their subscription tier.

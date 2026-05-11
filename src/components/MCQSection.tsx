@@ -16,6 +16,7 @@ export function MCQSection() {
   const [submitted, setSubmitted] = useState(false);
   const [customQuizzes, setCustomQuizzes] = useState<MCQQuiz[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSchema, setShowSchema] = useState(false);
   const [customMd, setCustomMd] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +104,7 @@ export function MCQSection() {
     setCurrentQuiz({ ...quiz, questions: shuffled });
     setAnswers({});
     setSubmitted(false);
+    setShowSchema(quiz.subjectId === 'db');
   };
 
   const handleSelectOption = (qIndex: number, oIndex: number, isMultiple: boolean) => {
@@ -286,8 +288,20 @@ export function MCQSection() {
               <div className="w-px h-4 bg-gray-800"></div>
               <h2 className="text-base font-semibold text-gray-200">{currentQuiz.title}</h2>
             </div>
-            {submitted && (
-              <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              {currentQuiz.subjectId === 'db' && (
+                <button 
+                  onClick={() => setShowSchema(!showSchema)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all",
+                    showSchema ? "bg-purple-500 text-white" : "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
+                  )}
+                >
+                  <Database className="w-3 h-3" /> SCHEMA REF
+                </button>
+              )}
+              {submitted && (
+                <div className="flex items-center gap-4">
                 <span className="text-base font-medium">
                   Score: <span className={cn("font-bold", score > total / 2 ? "text-green-400" : "text-yellow-400")}>{score}/{total}</span>
                 </span>
@@ -300,9 +314,42 @@ export function MCQSection() {
               </div>
             )}
           </div>
+          </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-            <div className="max-w-3xl mx-auto space-y-8 pb-32">
+            <div className="max-w-3xl mx-auto space-y-8 pb-32 relative">
+              {showSchema && currentQuiz.subjectId === 'db' && (
+                <div className="sticky top-0 z-20 mb-8 p-4 bg-[#1a1f29] border border-purple-500/30 rounded-xl shadow-2xl animate-in fade-in slide-in-from-top-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                      <Database className="w-3 h-3" /> Database Schema Reference
+                    </h3>
+                    <button onClick={() => setShowSchema(false)} className="text-gray-500 hover:text-white">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">movies</span>
+                      <div className="text-[10px] font-mono text-gray-500 bg-black/30 p-2 rounded border border-gray-800">
+                        id, title, genre, release_year, imdb_rating, duration_mins
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">users</span>
+                      <div className="text-[10px] font-mono text-gray-500 bg-black/30 p-2 rounded border border-gray-800">
+                        id, username, subscription_tier, signup_date
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">watch_history</span>
+                      <div className="text-[10px] font-mono text-gray-500 bg-black/30 p-2 rounded border border-gray-800">
+                        watch_id, user_id, movie_id, completion_pct, watch_date
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {currentQuiz.questions.map((q, qIndex) => {
                 const hasAnswered = answers[qIndex] !== undefined && (Array.isArray(answers[qIndex]) ? (answers[qIndex] as number[]).length > 0 : true);
                 const correct = submitted ? isCorrect(qIndex) : false;
