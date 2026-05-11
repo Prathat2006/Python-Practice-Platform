@@ -7,8 +7,9 @@ import 'prismjs/components/prism-sql';
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
 import { cn } from '../lib/utils';
 import { getSqlJs, runSQLQuery, MOVIE_DB_SCHEMA, type SQLTestResult } from '../lib/sqlRunner';
-import { sqlProblems, type SQLProblem } from '../lib/sqlProblems';
+import { sqlQuizzes, type SQLProblem, type SQLQuiz } from '../lib/sqlQuizzes';
 import Markdown from 'react-markdown';
+import { motion, AnimatePresence } from 'motion/react';
 
 const ResizeHandle = () => (
   <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-blue-600 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
@@ -24,15 +25,19 @@ const ResizeHandleVertical = () => (
 
 export function SQLCodingSection() {
   const [db, setDb] = useState<any>(null);
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [draftCode, setDraftCode] = useState('');
-  const [codes, setCodes] = useState<string[]>(sqlProblems.map(p => p.initialCode));
-  const [results, setResults] = useState<Record<number, SQLTestResult>>({});
+  const [codes, setCodes] = useState<Record<string, string>>({});
+  const [results, setResults] = useState<Record<string, SQLTestResult>>({});
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState<'console' | 'schema'>('console');
-
   const [error, setError] = useState<string | null>(null);
+
+  const selectedQuiz = sqlQuizzes.find(q => q.id === selectedQuizId);
+  const currentProblems = selectedQuiz?.problems || [];
+  const currentProblem = currentProblems[currentIndex];
 
   useEffect(() => {
     async function init() {
@@ -52,22 +57,19 @@ export function SQLCodingSection() {
   }, []);
 
   useEffect(() => {
-    setDraftCode(codes[currentIndex]);
-  }, [currentIndex]);
+    if (currentProblem) {
+      setDraftCode(codes[currentProblem.id] || currentProblem.initialCode);
+    }
+  }, [currentIndex, selectedQuizId]);
 
   const handleRun = async () => {
-    if (!db) return;
+    if (!db || !currentProblem) return;
     setRunning(true);
-    const problem = sqlProblems[currentIndex];
     try {
-      const res = await runSQLQuery(db, draftCode, problem.expectedQuery);
-      setResults(prev => ({ ...prev, [currentIndex]: res }));
+      const res = await runSQLQuery(db, draftCode, currentProblem.expectedQuery);
+      setResults(prev => ({ ...prev, [currentProblem.id]: res }));
       // Save code
-      setCodes(prev => {
-        const next = [...prev];
-        next[currentIndex] = draftCode;
-        return next;
-      });
+      setCodes(prev => ({ ...prev, [currentProblem.id]: draftCode }));
     } catch (err) {
       console.error(err);
     } finally {
@@ -104,32 +106,98 @@ export function SQLCodingSection() {
     );
   }
 
-  const currentProblem = sqlProblems[currentIndex];
-  const currentResult = results[currentIndex];
+  if (!selectedQuizId) {
+    return (
+      <div className="flex-1 overflow-y-auto bg-[#0d0f14] p-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-purple-500/20 rounded-lg">
+              <Database className="w-8 h-8 text-purple-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">SQL Mastery Quizzes</h1>
+              <p className="text-gray-400 text-sm">Practice real-world SQL queries in our sandboxed environment.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sqlQuizzes.map((quiz, idx) => (
+              <motion.button
+                key={quiz.id}
+                whileHover={{ scale: 1.02, translateY: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setSelectedQuizId(quiz.id);
+                  setCurrentIndex(0);
+                }}
+                className="group relative flex flex-col text-left bg-[#11141b] border border-gray-800 rounded-xl overflow-hidden transition-colors hover:border-purple-500/50 p-6"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Database className="w-24 h-24 text-white" />
+                </div>
+                <div className="mb-4">
+                  <span className="inline-block px-2 py-1 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400 uppercase tracking-wider mb-2">
+                    Quiz {idx + 1}
+                  </span>
+                  <h3 className="text-xl font-bold text-white mb-2">{quiz.title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">{quiz.description}</p>
+                </div>
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
+                    <span className="flex items-center gap-1">
+                      <FileCode2 className="w-3.5 h-3.5" />
+                      {quiz.problems.length} Challenges
+                    </span>
+                    <span className="flex items-center gap-1 text-green-500/80">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {quiz.problems.filter(p => results[p.id]?.passed).length} Comp.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-purple-400 text-sm font-bold group-hover:translate-x-1 transition-transform">
+                    Start <Play className="w-3 h-3 fill-current" />
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentResult = results[currentProblem?.id];
 
   return (
     <div className="flex flex-1 overflow-hidden bg-[#0d0f14]">
       <PanelGroup orientation="horizontal" className="flex-1">
         {/* Sidebar */}
         <Panel defaultSize={15} minSize={10} className="flex flex-col bg-[#0d0f14] border-r border-gray-800">
-          <div className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">SQL Challenges</div>
-          <div className="flex-1 overflow-y-auto p-3 pt-0 space-y-1">
-            {sqlProblems.map((prob, i) => {
-              const passed = results[i]?.passed;
+          <div className="p-3 flex items-center justify-between border-b border-gray-800 bg-[#11141b]/50">
+             <button 
+                onClick={() => setSelectedQuizId(null)}
+                className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors flex items-center gap-1"
+             >
+                <XCircle className="w-3 h-3" /> BACK TO LIST
+             </button>
+             <span className="text-[10px] font-mono text-purple-500/60 font-bold uppercase tracking-widest">{selectedQuiz.title}</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+            {currentProblems.map((prob, i) => {
+              const passed = results[prob.id]?.passed;
               return (
                 <button
                   key={prob.id}
                   onClick={() => setCurrentIndex(i)}
                   className={cn(
                     "w-full text-left px-3 py-2 rounded-md text-[11px] font-medium transition-colors flex items-center gap-2",
-                    currentIndex === i ? "bg-purple-600/20 text-purple-400" : "text-gray-400 hover:bg-gray-800"
+                    currentIndex === i ? "bg-purple-600/20 text-purple-400 shadow-[inset_0_0_10px_rgba(147,51,234,0.1)]" : "text-gray-400 hover:bg-gray-800"
                   )}
                 >
                   <span className={cn(
-                    "w-2 h-2 rounded-full",
-                    passed ? "bg-green-500" : passed === false ? "bg-red-500" : "bg-gray-700"
+                    "w-2 h-2 rounded-full shrink-0",
+                    passed ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : passed === false ? "bg-red-500 shadow-[0_0_8px_rgba(239,44,44,0.5)]" : "bg-gray-700"
                   )} />
-                  {i + 1}. {prob.title}
+                  <span className="truncate">{currentIndex === i ? prob.title : `${i + 1}. ${prob.title}`}</span>
                 </button>
               );
             })}
