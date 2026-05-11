@@ -14,6 +14,7 @@ import { quiz1Problems } from './lib/quiz1';
 import { masterQuizProblems } from './lib/master_quiz';
 import { mcqQuizzes } from './lib/mcqQuizzes';
 import { MCQSection } from './components/MCQSection';
+import { SQLCodingSection } from './components/SQLCodingSection';
 
 const ResizeHandle = () => (
   <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-blue-600 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
@@ -56,7 +57,7 @@ export default function App() {
   const [byokKey, setByokKey] = useState<string>('');
   const [customModel, setCustomModel] = useState<string>('');
 
-  const [appMode, setAppMode] = useState<'coding' | 'mcq'>('coding');
+  const [appMode, setAppMode] = useState<'coding' | 'mcq' | 'sql'>('coding');
 
   useEffect(() => {
     try {
@@ -292,14 +293,21 @@ export default function App() {
               onClick={() => setAppMode('coding')}
               className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'coding' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
             >
-              Coding
+              Python
+            </button>
+            <button 
+              type="button"
+              onClick={() => setAppMode('sql')}
+              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'sql' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+            >
+              SQL
             </button>
             <button 
               type="button"
               onClick={() => setAppMode('mcq')}
               className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'mcq' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
             >
-              MCQ
+              Quizzes
             </button>
           </div>
         </div>
@@ -447,6 +455,8 @@ export default function App() {
 
       {appMode === 'mcq' ? (
         <MCQSection />
+      ) : appMode === 'sql' ? (
+        <SQLCodingSection />
       ) : (
       <main className="flex flex-1 overflow-hidden relative">
         <AnimatePresence mode="wait">

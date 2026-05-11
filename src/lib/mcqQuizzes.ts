@@ -5,6 +5,7 @@ import boostingMd from './quizzes/boosting.md?raw';
 import rfMd from './quizzes/random_forests.md?raw';
 import combined710Md from './quizzes/week7_to_10.md?raw';
 import dbQuiz2Md from './quizzes/db_quiz_2.md?raw';
+import sqlPracticeMd from './quizzes/sql_practice_problems.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -29,5 +30,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("week-10", week10Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("boosting", boostingMd), subjectId: 'ml' },
   { ...parseMarkdownQuiz("random-forests", rfMd), subjectId: 'ml' },
-  { ...parseMarkdownQuiz("db-quiz-2", dbQuiz2Md), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-quiz-2", dbQuiz2Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("sql-practice", sqlPracticeMd), subjectId: 'db' }
 ];
