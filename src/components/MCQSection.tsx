@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { mcqQuizzes, type MCQQuiz } from '../lib/mcqQuizzes';
 import { parseMarkdownQuiz } from '../lib/mdParser';
-import { Check, X, RefreshCcw, FileText, Target, Plus, Upload, Copy, Database } from 'lucide-react';
+import { Check, X, RefreshCcw, FileText, Target, Plus, Upload, Copy, Database, Trophy, Clock, Hash } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
+import { analyticsService, type UserAnalytics } from '../lib/analyticsService';
 
 export function MCQSection() {
   const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
@@ -17,6 +18,7 @@ export function MCQSection() {
   const [customQuizzes, setCustomQuizzes] = useState<MCQQuiz[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
+  const [analytics, setAnalytics] = useState<UserAnalytics>(analyticsService.getAnalytics());
   const [customMd, setCustomMd] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +169,14 @@ export function MCQSection() {
   const score = currentQuiz?.questions.reduce((acc, _, i) => acc + (isCorrect(i) ? 1 : 0), 0) || 0;
   const total = currentQuiz?.questions.length || 0;
 
+  const handleSubmit = () => {
+    setSubmitted(true);
+    if (currentQuiz) {
+      analyticsService.saveAttempt(currentQuiz.id, score, total);
+      setAnalytics(analyticsService.getAnalytics());
+    }
+  };
+
   const handleBackToSubjects = () => {
     setSelectedSubject(null);
   };
@@ -255,21 +265,56 @@ export function MCQSection() {
                     </div>
                   </div>
 
-                  {subjects.find(s => s.id === selectedSubject)?.quizzes.map((quiz) => (
-                    <div 
-                      key={quiz.id}
-                      onClick={() => handleStartQuiz(quiz)}
-                      className="bg-[#11141b] border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1d23] rounded-xl p-6 cursor-pointer transition-all group flex items-start gap-4"
-                    >
-                      <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
-                        <FileText className="w-6 h-6" />
+                  {subjects.find(s => s.id === selectedSubject)?.quizzes.map((quiz) => {
+                    const stats = analytics.quizzes[quiz.id];
+                    return (
+                      <div 
+                        key={quiz.id}
+                        onClick={() => handleStartQuiz(quiz)}
+                        className="bg-[#11141b] border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1d23] rounded-xl p-6 cursor-pointer transition-all group flex flex-col gap-4"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+                            <FileText className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-gray-200 mb-1 truncate">{quiz.title}</h3>
+                            <p className="text-xs text-gray-500">{quiz.questions.length} questions</p>
+                          </div>
+                        </div>
+                        
+                        {stats && (
+                          <div className="grid grid-cols-3 gap-2 pt-4 border-t border-gray-800/50">
+                            <div className="flex flex-col gap-1">
+                              <span className="flex items-center gap-1 text-[10px] text-gray-500 font-bold uppercase">
+                                <Hash className="w-3 h-3" /> Attempts
+                              </span>
+                              <span className="text-sm font-bold text-gray-300">{stats.attemptsCount}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <span className="flex items-center gap-1 text-[10px] text-gray-500 font-bold uppercase">
+                                <Trophy className="w-3 h-3" /> Last Score
+                              </span>
+                              <span className={cn(
+                                "text-sm font-bold",
+                                stats.lastScore > stats.lastTotal / 2 ? "text-green-400" : "text-yellow-400"
+                              )}>
+                                {stats.lastScore}/{stats.lastTotal}
+                              </span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <span className="flex items-center gap-1 text-[10px] text-gray-500 font-bold uppercase">
+                                <Clock className="w-3 h-3" /> Last Taken
+                              </span>
+                              <span className="text-xs font-medium text-gray-400 truncate">
+                                {new Date(stats.lastAttemptDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-200 mb-1 truncate">{quiz.title}</h3>
-                        <p className="text-xs text-gray-500">{quiz.questions.length} questions</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -479,7 +524,7 @@ export function MCQSection() {
                   Answered <span className="text-white">{Object.keys(answers).length}</span> of {total}
                 </span>
                 <button
-                  onClick={() => setSubmitted(true)}
+                  onClick={handleSubmit}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2 rounded-full transition-colors"
                 >
                   SUBMIT QUIZ

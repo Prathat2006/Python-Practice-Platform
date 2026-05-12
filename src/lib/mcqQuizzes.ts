@@ -8,6 +8,7 @@ import dbQuiz2Md from './quizzes/db_quiz_2.md?raw';
 import sqlPracticeMd from './quizzes/sql_practice_problems.md?raw';
 import sqlDbSystemsMd from './quizzes/sql_db_systems_mcq.md?raw';
 import sqlRelationalAdvancedMd from './quizzes/sql_relational_advanced.md?raw';
+import sqlDdlIntegrityMd from './quizzes/sql_ddl_integrity.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -35,5 +36,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-quiz-2", dbQuiz2Md), subjectId: 'db' },
   { ...parseMarkdownQuiz("sql-practice", sqlPracticeMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("sql-db-systems", sqlDbSystemsMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("sql-relational-advanced", sqlRelationalAdvancedMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("sql-relational-advanced", sqlRelationalAdvancedMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("sql-ddl-integrity", sqlDdlIntegrityMd), subjectId: 'db' }
 ];
