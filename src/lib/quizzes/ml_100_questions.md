@@ -1268,7 +1268,7 @@ C) 0.5
 D) 1
 
 **Answer:** B
-**Explanation:** Given as 0.2.
+**Explanation:** The probability of being defective (X=1) was explicitly given in the dataset description as p=0.2. Therefore, P(X=1) = 0.2.
 
 ---
 

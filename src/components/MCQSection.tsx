@@ -104,7 +104,7 @@ export function MCQSection() {
     setActiveQuizId(quiz.id);
     
     // Disable shuffling for ML Quiz 1, Practice and 100+ Questions to maintain historical/dataset context order
-    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions') {
+    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2') {
       setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
     } else {
       const groups: MCQProblem[][] = [];
