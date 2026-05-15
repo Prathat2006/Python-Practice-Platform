@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { mcqQuizzes, type MCQQuiz, type MCQProblem } from '../lib/mcqQuizzes';
 import { parseMarkdownQuiz } from '../lib/mdParser';
-import { Check, X, RefreshCcw, FileText, Target, Plus, Upload, Copy, Database, Trophy, Clock, Hash } from 'lucide-react';
+import { Check, X, RefreshCcw, FileText, Target, Plus, Upload, Copy, Database, Trophy, Clock, Hash, Terminal } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -42,6 +42,16 @@ export function MCQSection() {
       quizzes: [
         ...mcqQuizzes.filter(q => q.subjectId === 'db'),
         ...customQuizzes.filter(q => q.subjectId === 'db')
+      ]
+    },
+    {
+      id: 'os',
+      title: 'Operating Systems',
+      description: 'Memory management, processes, CPU scheduling, and file systems.',
+      icon: <Terminal className="w-8 h-8 text-green-400" />,
+      quizzes: [
+        ...mcqQuizzes.filter(q => q.subjectId === 'os'),
+        ...customQuizzes.filter(q => q.subjectId === 'os')
       ]
     }
   ];

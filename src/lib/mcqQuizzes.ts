@@ -13,6 +13,13 @@ import mlQuiz1Md from './quizzes/ml_quiz1.md?raw';
 import mlQuiz1PracticeMd from './quizzes/ml_quiz1_practice.md?raw';
 import ml100QuestionsMd from './quizzes/ml_100_questions.md?raw';
 import mlQuiz2Md from './quizzes/ml_quiz2.md?raw';
+import osWeek21Md from './quizzes/os_week2_1.md?raw';
+import osWeek22Md from './quizzes/os_week2_2.md?raw';
+import osWeek1Md from './quizzes/os_week1.md?raw';
+import osWeek3Md from './quizzes/os_week3.md?raw';
+import osWeek4Md from './quizzes/os_week4.md?raw';
+import osWeek5Md from './quizzes/os_week5.md?raw';
+import osWeek6Md from './quizzes/os_week6.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -46,5 +53,12 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("sql-relational-advanced", sqlRelationalAdvancedMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("sql-ddl-integrity", sqlDdlIntegrityMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("ml-quiz1-practice", mlQuiz1PracticeMd), subjectId: 'ml' },
-  { ...parseMarkdownQuiz("ml-quiz2", mlQuiz2Md), subjectId: 'ml' }
+  { ...parseMarkdownQuiz("ml-quiz2", mlQuiz2Md), subjectId: 'ml' },
+  { ...parseMarkdownQuiz("os-week1", osWeek1Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week2-1", osWeek21Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week2-2", osWeek22Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week3", osWeek3Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week4", osWeek4Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week5", osWeek5Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-week6", osWeek6Md), subjectId: 'os' }
 ];
