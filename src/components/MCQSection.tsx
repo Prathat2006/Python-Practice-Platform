@@ -103,8 +103,8 @@ export function MCQSection() {
   const handleStartQuiz = (quiz: MCQQuiz) => {
     setActiveQuizId(quiz.id);
     
-    // Disable shuffling for ML Quiz 1 and Practice to maintain historical/dataset context order
-    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1') {
+    // Disable shuffling for ML Quiz 1, Practice and 100+ Questions to maintain historical/dataset context order
+    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions') {
       setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
     } else {
       const groups: MCQProblem[][] = [];

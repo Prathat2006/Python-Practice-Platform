@@ -11,6 +11,7 @@ import sqlRelationalAdvancedMd from './quizzes/sql_relational_advanced.md?raw';
 import sqlDdlIntegrityMd from './quizzes/sql_ddl_integrity.md?raw';
 import mlQuiz1Md from './quizzes/ml_quiz1.md?raw';
 import mlQuiz1PracticeMd from './quizzes/ml_quiz1_practice.md?raw';
+import ml100QuestionsMd from './quizzes/ml_100_questions.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -31,6 +32,7 @@ export type MCQQuiz = {
 };
 
 export const mcqQuizzes: MCQQuiz[] = [
+  { ...parseMarkdownQuiz("ml-100-questions", ml100QuestionsMd), subjectId: 'ml' },
   { ...parseMarkdownQuiz("ml-quiz-1", mlQuiz1Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("combined-7-10", combined710Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("week-9", week9Md), subjectId: 'ml' },

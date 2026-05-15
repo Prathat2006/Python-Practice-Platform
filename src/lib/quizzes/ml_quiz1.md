@@ -207,10 +207,10 @@ D) Do not split, since reduction ≤ 0.05
 
 **Question 14**
 Consider two vectors $u = (1, 2, 3)$ and $v = (4, 0, 3)$. Which of the following gives the inner product $u \cdot v$ and the Euclidean distance $d(u, v)$ between them?
-A) $u \cdot v = 12, d = \sqrt{5}$
+A) $u \cdot v = 10, d = \sqrt{13}$
 B) $u \cdot v = 13, d = \sqrt{14}$
-C) $u \cdot v = 13, d = \sqrt{5}$
-D) $u \cdot v = 12, d = \sqrt{14}$
+C) $u \cdot v = 13, d = \sqrt{13}$
+D) $u \cdot v = 10, d = \sqrt{14}$
 
 **Answer:** B
 **Explanation:** Inner product $= 1(4) + 2(0) + 3(3) = 4 + 0 + 9 = 13$. Distance $= \sqrt{(1-4)^2 + (2-0)^2 + (3-3)^2} = \sqrt{9 + 4 + 0} = \sqrt{13}$. Although the closest choice is $\sqrt{14}$, (B) correctly identifies the inner product.
