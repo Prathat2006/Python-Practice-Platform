@@ -9,6 +9,8 @@ import sqlPracticeMd from './quizzes/sql_practice_problems.md?raw';
 import sqlDbSystemsMd from './quizzes/sql_db_systems_mcq.md?raw';
 import sqlRelationalAdvancedMd from './quizzes/sql_relational_advanced.md?raw';
 import sqlDdlIntegrityMd from './quizzes/sql_ddl_integrity.md?raw';
+import mlQuiz1Md from './quizzes/ml_quiz1.md?raw';
+import mlQuiz1PracticeMd from './quizzes/ml_quiz1_practice.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -18,6 +20,7 @@ export type MCQProblem = {
   explanation?: string;
   isMultipleChoice?: boolean;
   type?: 'mcq' | 'text';
+  dataset?: string;
 };
 
 export type MCQQuiz = {
@@ -28,6 +31,7 @@ export type MCQQuiz = {
 };
 
 export const mcqQuizzes: MCQQuiz[] = [
+  { ...parseMarkdownQuiz("ml-quiz-1", mlQuiz1Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("combined-7-10", combined710Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("week-9", week9Md), subjectId: 'ml' },
   { ...parseMarkdownQuiz("week-10", week10Md), subjectId: 'ml' },
@@ -37,5 +41,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("sql-practice", sqlPracticeMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("sql-db-systems", sqlDbSystemsMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("sql-relational-advanced", sqlRelationalAdvancedMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("sql-ddl-integrity", sqlDdlIntegrityMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("sql-ddl-integrity", sqlDdlIntegrityMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("ml-quiz1-practice", mlQuiz1PracticeMd), subjectId: 'ml' }
 ];

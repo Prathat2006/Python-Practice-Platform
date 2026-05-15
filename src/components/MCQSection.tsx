@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { mcqQuizzes, type MCQQuiz } from '../lib/mcqQuizzes';
+import { mcqQuizzes, type MCQQuiz, type MCQProblem } from '../lib/mcqQuizzes';
 import { parseMarkdownQuiz } from '../lib/mdParser';
 import { Check, X, RefreshCcw, FileText, Target, Plus, Upload, Copy, Database, Trophy, Clock, Hash } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -99,11 +99,50 @@ export function MCQSection() {
     reader.readAsText(file);
   };
 
-  // Randomise questions only when starting a new quiz
+  // Randomise questions ensuring dataset-linked questions stay together
   const handleStartQuiz = (quiz: MCQQuiz) => {
     setActiveQuizId(quiz.id);
-    const shuffled = [...quiz.questions].sort(() => Math.random() - 0.5);
-    setCurrentQuiz({ ...quiz, questions: shuffled });
+    
+    // Disable shuffling for ML Quiz 1 and Practice to maintain historical/dataset context order
+    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1') {
+      setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
+    } else {
+      const groups: MCQProblem[][] = [];
+      let currentGroup: MCQProblem[] = [];
+      let lastDataset: string | undefined = undefined;
+
+      quiz.questions.forEach(q => {
+        if (!q.dataset) {
+          if (currentGroup.length > 0) groups.push(currentGroup);
+          groups.push([q]);
+          currentGroup = [];
+          lastDataset = undefined;
+        } else {
+          if (lastDataset !== q.dataset) {
+            if (currentGroup.length > 0) groups.push(currentGroup);
+            currentGroup = [q];
+            lastDataset = q.dataset;
+          } else {
+            currentGroup.push(q);
+          }
+        }
+      });
+      if (currentGroup.length > 0) groups.push(currentGroup);
+
+      // Shuffle the top-level groups
+      const shuffledGroups = [...groups].sort(() => Math.random() - 0.5);
+      
+      // Shuffle within each group (only if it's a multi-question set)
+      const fullyShuffled = shuffledGroups.flatMap(group => {
+        if (group.length > 1) {
+          return [...group].sort(() => Math.random() - 0.5);
+        }
+        return group;
+      });
+
+      setCurrentQuiz({ ...quiz, questions: fullyShuffled });
+    }
+
     setAnswers({});
     setSubmitted(false);
     setShowSchema(quiz.subjectId === 'db');
@@ -399,6 +438,10 @@ export function MCQSection() {
                 const hasAnswered = answers[qIndex] !== undefined && (Array.isArray(answers[qIndex]) ? (answers[qIndex] as number[]).length > 0 : true);
                 const correct = submitted ? isCorrect(qIndex) : false;
                 
+                // Check if we should show the dataset (first in a group)
+                const prevQ = currentQuiz.questions[qIndex - 1];
+                const showDataset = q.dataset && (!prevQ || prevQ.dataset !== q.dataset);
+
                 return (
                   <div 
                     key={qIndex} 
@@ -409,6 +452,16 @@ export function MCQSection() {
                         : hasAnswered ? "border-blue-500/30" : "border-gray-800"
                     )}
                   >
+                    {showDataset && (
+                      <div className="mb-6 p-6 bg-[#0d0f14] border border-gray-800 rounded-lg overflow-x-auto text-sm animate-in fade-in zoom-in-95 duration-500">
+                        <div className="flex items-center gap-2 mb-4 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b border-gray-800 pb-2">
+                          <Database className="w-3 h-3" /> Dataset / Context for following questions
+                        </div>
+                        <div className="markdown-body prose prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{q.dataset!}</ReactMarkdown>
+                        </div>
+                      </div>
+                    )}
                     <div className="text-lg text-gray-200 leading-relaxed font-semibold mb-6 whitespace-pre-wrap flex items-start gap-4">
                       <span className="text-gray-500 font-bold">{qIndex + 1}.</span>
                       <div className="flex-1">
