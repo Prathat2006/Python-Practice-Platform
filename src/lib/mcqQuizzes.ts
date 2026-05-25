@@ -20,6 +20,12 @@ import osWeek3Md from './quizzes/os_week3.md?raw';
 import osWeek4Md from './quizzes/os_week4.md?raw';
 import osWeek5Md from './quizzes/os_week5.md?raw';
 import osWeek6Md from './quizzes/os_week6.md?raw';
+import osTaSpecialQuiz1Md from './quizzes/os_ta_special_quiz_1.md?raw';
+import mlWeek11Md from './quizzes/ml_week11.md?raw';
+import dbIntroLecture1Md from './quizzes/db_intro_lecture1.md?raw';
+import dbIntroLecture1Part2Md from './quizzes/db_intro_lecture1_part2.md?raw';
+import dbGradedQuiz1Md from './quizzes/db_graded_quiz1.md?raw';
+import dbLecture345Md from './quizzes/db_lecture3_4_5.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -60,5 +66,11 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("os-week3", osWeek3Md), subjectId: 'os' },
   { ...parseMarkdownQuiz("os-week4", osWeek4Md), subjectId: 'os' },
   { ...parseMarkdownQuiz("os-week5", osWeek5Md), subjectId: 'os' },
-  { ...parseMarkdownQuiz("os-week6", osWeek6Md), subjectId: 'os' }
+  { ...parseMarkdownQuiz("os-week6", osWeek6Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("os-ta-special-quiz-1", osTaSpecialQuiz1Md), subjectId: 'os' },
+  { ...parseMarkdownQuiz("ml-week11", mlWeek11Md), subjectId: 'ml' },
+  { ...parseMarkdownQuiz("db-lecture1-intro", dbIntroLecture1Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-lecture1-intro-part2", dbIntroLecture1Part2Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-graded-quiz-1", dbGradedQuiz1Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-lecture3-4-5", dbLecture345Md), subjectId: 'db' }
 ];
