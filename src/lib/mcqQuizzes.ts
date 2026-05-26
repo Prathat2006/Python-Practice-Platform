@@ -29,6 +29,7 @@ import dbLecture345Md from './quizzes/db_lecture3_4_5.md?raw';
 import dbWeek2Md from './quizzes/db_week2.md?raw';
 import dbWeek6Md from './quizzes/db_week6.md?raw';
 import dbWeek6Part2Md from './quizzes/db_week6_part2.md?raw';
+import dbWeek7Md from './quizzes/db_week7.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -78,5 +79,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-lecture3-4-5", dbLecture345Md), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week2", dbWeek2Md), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week6", dbWeek6Md), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week6-part2", dbWeek6Part2Md), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week6-part2", dbWeek6Part2Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-week7", dbWeek7Md), subjectId: 'db' }
 ];

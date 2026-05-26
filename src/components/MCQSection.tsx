@@ -114,7 +114,7 @@ export function MCQSection() {
     setActiveQuizId(quiz.id);
     
     // Disable shuffling for ML Quiz 1, Practice and 100+ Questions to maintain historical/dataset context order
-    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2' || quiz.id === 'ml-week11' || quiz.id === 'db-lecture1-intro' || quiz.id === 'db-lecture1-intro-part2' || quiz.id === 'db-graded-quiz-1' || quiz.id === 'db-lecture3-4-5' || quiz.id === 'db-week2' || quiz.id === 'db-week6' || quiz.id === 'db-week6-part2') {
+    if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2' || quiz.id === 'ml-week11' || quiz.id === 'db-lecture1-intro' || quiz.id === 'db-lecture1-intro-part2' || quiz.id === 'db-graded-quiz-1' || quiz.id === 'db-lecture3-4-5' || quiz.id === 'db-week2' || quiz.id === 'db-week6' || quiz.id === 'db-week6-part2' || quiz.id === 'db-week7') {
       setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
     } else {
       const groups: MCQProblem[][] = [];
@@ -523,20 +523,41 @@ export function MCQSection() {
                           
                           let bgClass = "bg-[#161a22] border-gray-800 hover:bg-[#1a1f29]";
                           let icon = null;
+                          let badge = null;
                           
                           if (submitted) {
-                            if (isOptionCorrect) {
-                              bgClass = "bg-green-500/10 border-green-500/50 text-green-200";
-                              icon = <Check className="w-4 h-4 text-green-400 ml-auto shrink-0" />;
+                            if (isSelected && isOptionCorrect) {
+                              bgClass = "bg-green-500/10 border-green-500/60 text-green-200 ring-1 ring-green-500/20";
+                              icon = <Check className="w-4 h-4 text-green-400 shrink-0" />;
+                              badge = (
+                                <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                  Your Choice • Correct
+                                </span>
+                              );
                             } else if (isSelected && !isOptionCorrect) {
-                              bgClass = "bg-red-500/10 border-red-500/50 text-red-200";
-                              icon = <X className="w-4 h-4 text-red-400 ml-auto shrink-0" />;
+                              bgClass = "bg-red-500/10 border-red-500/60 text-red-200 ring-1 ring-red-500/20";
+                              icon = <X className="w-4 h-4 text-red-400 shrink-0" />;
+                              badge = (
+                                <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                  Your Choice • Incorrect
+                                </span>
+                              );
+                            } else if (!isSelected && isOptionCorrect) {
+                              bgClass = "bg-yellow-500/5 border-dashed border-yellow-500/40 text-yellow-200 opacity-90";
+                              icon = <Check className="w-4 h-4 text-yellow-400/75 shrink-0 opacity-80" />;
+                              badge = (
+                                <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                  Correct Option • Missed
+                                </span>
+                              );
                             } else {
-                              bgClass = "bg-[#161a22] border-gray-800 opacity-50";
+                              bgClass = "bg-[#11141b]/40 border-gray-900/50 text-gray-500 opacity-40";
+                              icon = null;
+                              badge = null;
                             }
                           } else if (isSelected) {
                             bgClass = "bg-blue-500/20 border-blue-500/50 text-blue-200";
-                            icon = <Target className="w-4 h-4 text-blue-400 ml-auto shrink-0" />;
+                            icon = <Target className="w-4 h-4 text-blue-400 shrink-0" />;
                           }
 
                           return (
@@ -553,10 +574,13 @@ export function MCQSection() {
                               <span className="w-10 shrink-0 text-gray-500 font-mono text-sm">
                                 {String.fromCharCode(65 + oIndex)}.
                               </span>
-                              <span className="flex-1 markdown-body prose prose-invert max-w-none prose-p:my-0">
+                              <span className="flex-1 markdown-body prose prose-invert max-w-none prose-p:my-0 pr-4">
                                 <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>{opt}</ReactMarkdown>
                               </span>
-                              {icon}
+                              <div className="flex items-center gap-3 shrink-0 ml-auto">
+                                {badge}
+                                {icon}
+                              </div>
                             </button>
                           );
                         })}
