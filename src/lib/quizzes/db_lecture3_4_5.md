@@ -231,8 +231,12 @@ D. Leaf node
 **Question 20**
 When root splits in B+ Tree:
 A. Height decreases
+B. Height increases
+C. Height remains unchanged
+D. Tree becomes unbalanced
+
 **Answer:** B
-**Explanation:** When root nodes overflow and split recursively, a parent node is initialized above, raising the overall balanced tree height by 1 level.
+**Explanation:** When root nodes overflow and split recursively, a new root node is created above, increasing the overall balanced tree height by exactly 1 level.
 
 ---
 
