@@ -17,14 +17,14 @@ import { MCQSection } from './components/MCQSection';
 import { SQLCodingSection } from './components/SQLCodingSection';
 
 const ResizeHandle = () => (
-  <PanelResizeHandle className="w-2 bg-gray-800 hover:bg-blue-600 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
-    <div className="w-0.5 h-8 bg-gray-600 group-hover:bg-blue-300 rounded" />
+  <PanelResizeHandle className="w-1 bg-[#11141b] border-r border-[#1e2330] hover:bg-indigo-500/50 transition-colors flex flex-col justify-center items-center group cursor-col-resize z-10 shrink-0">
+    <div className="w-0.5 h-6 bg-slate-800 group-hover:bg-indigo-300 rounded-full transition-colors" />
   </PanelResizeHandle>
 );
 
 const ResizeHandleVertical = () => (
-  <PanelResizeHandle className="h-2 bg-gray-800 hover:bg-blue-600 transition-colors flex justify-center items-center group cursor-row-resize z-10 shrink-0">
-    <div className="h-0.5 w-8 bg-gray-600 group-hover:bg-blue-300 rounded" />
+  <PanelResizeHandle className="h-1 bg-[#11141b] border-b border-[#1e2330] hover:bg-indigo-500/50 transition-colors flex justify-center items-center group cursor-row-resize z-10 shrink-0">
+    <div className="h-0.5 w-6 bg-slate-800 group-hover:bg-indigo-300 rounded-full transition-colors" />
   </PanelResizeHandle>
 );
 
@@ -57,7 +57,42 @@ export default function App() {
   const [byokKey, setByokKey] = useState<string>('');
   const [customModel, setCustomModel] = useState<string>('');
 
-  const [appMode, setAppMode] = useState<'coding' | 'mcq' | 'sql'>('coding');
+  const [appMode, setAppMode] = useState<'coding' | 'mcq' | 'sql'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    if (m === 'mcq' || m === 'sql' || m === 'coding') {
+      return m;
+    }
+    return 'coding';
+  });
+
+  // Track mode changes to push state
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    if (m !== appMode) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', appMode);
+      // When switching modes via header tab, we clear any prior active quiz ID
+      url.searchParams.delete('quiz');
+      window.history.pushState({}, '', url.toString());
+    }
+  }, [appMode]);
+
+  // Synchronize on browser back/forward popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get('mode');
+      if (m === 'mcq' || m === 'sql' || m === 'coding') {
+        setAppMode(m);
+      } else {
+        setAppMode('coding');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     try {
@@ -281,31 +316,31 @@ export default function App() {
   const results = testResults[currentIndex] || null;
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0d0f14] text-gray-300 font-sans">
-      <nav className="h-12 border-b border-gray-800 flex items-center px-4 justify-between bg-[#11141b] shrink-0">
-        <div className="flex items-center gap-3 shrink-0 mr-4">
-          <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center font-bold text-xs text-white">
-            P
+    <div className="flex flex-col h-screen w-full bg-[#08090d] text-[#cbd5e1] font-sans">
+      <nav className="h-14 border-b border-slate-800/80 flex items-center px-5 justify-between bg-[#0b0d15]/95 backdrop-blur-md shrink-0 shadow-sm z-30">
+        <div className="flex items-center gap-3.5 shrink-0 mr-4">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-md shadow-indigo-600/30 font-display">
+            S
           </div>
-          <div className="flex bg-[#1a1d23] rounded-md border border-gray-800 p-0.5">
+          <div className="bg-[#080a12] rounded-xl border border-slate-800/80 p-0.5 flex gap-1 h-9 items-center shadow-inner">
             <button 
               type="button"
               onClick={() => setAppMode('coding')}
-              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'coding' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+              className={cn("px-3.5 py-1 text-xs font-semibold rounded-lg transition-all", appMode === 'coding' ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/10 font-bold" : "text-slate-400 hover:text-slate-200 border border-transparent")}
             >
               Python
             </button>
             <button 
               type="button"
               onClick={() => setAppMode('sql')}
-              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'sql' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+              className={cn("px-3.5 py-1 text-xs font-semibold rounded-lg transition-all", appMode === 'sql' ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/10 font-bold" : "text-slate-400 hover:text-slate-200 border border-transparent")}
             >
               SQL
             </button>
             <button 
               type="button"
               onClick={() => setAppMode('mcq')}
-              className={cn("px-3 py-1 text-xs font-medium rounded-sm transition-colors", appMode === 'mcq' ? "bg-[#252a33] text-gray-200" : "text-gray-500 hover:text-gray-300")}
+              className={cn("px-3.5 py-1 text-xs font-semibold rounded-lg transition-all", appMode === 'mcq' ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/10 font-bold" : "text-slate-400 hover:text-slate-200 border border-transparent")}
             >
               Quizzes
             </button>
@@ -314,30 +349,30 @@ export default function App() {
         
         {appMode === 'coding' && (
           <form id="extractor-form" onSubmit={handleGenerate} className="flex-1 max-w-4xl px-2 flex gap-2">
-          <div className="flex h-8 bg-[#1a1d23] border border-gray-700 rounded-md overflow-hidden flex-1">
-            <div className="flex items-center px-3 text-gray-500 bg-gray-800/30">
-              <LinkIcon className="w-3 h-3" />
+          <div className="flex h-9 bg-[#080a12] border border-slate-800/85 rounded-xl overflow-hidden flex-1 focus-within:border-indigo-500/50 transition-colors">
+            <div className="flex items-center px-3.5 text-slate-500 bg-slate-900/40">
+              <LinkIcon className="w-3.5 h-3.5 text-indigo-400/80" />
             </div>
             <input
               type="url"
               value={url}
               onChange={e => setUrl(e.target.value)}
-              placeholder="Docs or Tutorial URL..."
-              className="bg-transparent border-none outline-none flex-1 text-xs px-2 text-gray-400 focus:ring-0 w-full min-w-0"
+              placeholder="Paste Docs or Tutorial Web Address..."
+              className="bg-transparent border-none outline-none flex-1 text-xs px-2 text-slate-350 focus:ring-0 w-full min-w-0 placeholder-slate-600 font-sans"
               required
             />
           </div>
           <select 
             value={numQuestions} 
             onChange={e => setNumQuestions(Number(e.target.value))} 
-            className="h-8 bg-[#1a1d23] border border-gray-700 text-gray-400 text-xs px-2 rounded outline-none"
+            className="h-9 bg-[#080a12] border border-slate-800 text-slate-300 text-xs px-3 rounded-xl outline-none cursor-pointer focus:border-indigo-500/50 transition-colors"
           >
-            {[...Array(30)].map((_, i) => <option key={i+1} value={i+1}>{i+1} Qs</option>)}
+            {[...Array(30)].map((_, i) => <option key={i+1} value={i+1}>{i+1} Questions</option>)}
           </select>
           <select 
              value={difficulty} 
              onChange={e => setDifficulty(e.target.value)} 
-             className="h-8 w-24 bg-[#1a1d23] border border-gray-700 text-gray-400 text-xs px-2 rounded outline-none shrink-0"
+             className="h-9 w-24 bg-[#080a12] border border-slate-800 text-slate-300 text-xs px-2 rounded-xl outline-none shrink-0 cursor-pointer focus:border-indigo-500/50 transition-colors"
           >
             <option value="Easy">Easy</option>
             <option value="Medium">Medium</option>
@@ -346,9 +381,9 @@ export default function App() {
           <select 
              value={timerMode} 
              onChange={e => setTimerMode(e.target.value)} 
-             className="h-8 w-24 bg-[#1a1d23] border border-gray-700 text-gray-400 text-xs px-2 rounded outline-none shrink-0"
+             className="h-9 w-24 bg-[#080a12] border border-slate-800 text-slate-300 text-xs px-2 rounded-xl outline-none shrink-0 cursor-pointer focus:border-indigo-500/50 transition-colors"
           >
-            <option value="Auto">Auto Time</option>
+            <option value="Auto">Auto-Timing</option>
             <option value="15">15 mins</option>
             <option value="30">30 mins</option>
             <option value="45">45 mins</option>
@@ -357,11 +392,11 @@ export default function App() {
           <button
             type="submit"
             disabled={loading}
-            className="h-8 bg-blue-600 text-white text-xs px-4 font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 rounded"
+            className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md shadow-indigo-600/15 cursor-pointer uppercase tracking-wider font-display shrink-0"
           >
             {loading ? (
               <>
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span className="hidden sm:inline">{progressMsg || 'EXTRACTING...'}</span>
               </>
             ) : (
@@ -465,25 +500,25 @@ export default function App() {
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[#0d0f14] overflow-y-auto"
+               className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-[#08090d] overflow-y-auto"
              >
-                <div className="w-16 h-16 shrink-0 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-500 mb-6 border border-blue-500/20">
+                <div className="w-16 h-16 shrink-0 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mb-6 border border-indigo-500/20 glow-indigo">
                   <FileCode2 className="w-8 h-8" />
                 </div>
-                <h2 className="text-xl font-semibold text-white mb-2 shrink-0">Paste a URL to generate a challenge test</h2>
-                <p className="text-xs text-gray-500 max-w-md shrink-0 mb-8">Our AI extracts content from coding tutorials and instantly generates custom practice tests. Select the number of questions and difficulty level above.</p>
+                <h2 className="text-2xl font-bold text-white mb-2 shrink-0 font-display tracking-tight">Generate Instant Practice Problems</h2>
+                <p className="text-xs text-slate-400 max-w-md shrink-0 mb-8 leading-relaxed">Enter any web address of coding docs, exercises, or tutorial channels. Our engine maps concepts and structures a customized mock quiz locally with sandboxed tests.</p>
                 
                 {hasSave && (
                   <button
                     onClick={handleResume}
-                    className="bg-blue-600/20 text-blue-400 border border-blue-500/50 px-5 py-2.5 rounded font-medium hover:bg-blue-600/30 transition-colors flex items-center justify-center gap-2 mb-8"
+                    className="bg-indigo-600/15 text-indigo-250 border border-indigo-500/35 px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-600/25 transition-all flex items-center justify-center gap-2 mb-8 cursor-pointer shadow-lg shadow-indigo-600/5 animate-pulse"
                   >
-                    <Clock className="w-4 h-4" /> Resume Previous Session
+                    <Clock className="w-4 h-4 text-indigo-400" /> RESUME PRIOR CODING WORKSPACE
                   </button>
                 )}
 
                 <div className="w-full max-w-4xl text-left">
-                  <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Recommended Practice Sets</h3>
+                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 font-display">Recommended Preset Pathways</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
                       { 
@@ -509,14 +544,14 @@ export default function App() {
                           setNumQuestions(preset.q);
                           handleGenerate(undefined, preset.url, preset.q);
                         }}
-                        className="bg-[#1a1d23] hover:bg-gray-800 border border-gray-800 hover:border-gray-700 p-4 rounded-lg text-left transition-colors flex flex-col group"
+                        className="bg-[#0c0e15] border border-slate-800 hover:border-indigo-500/20 hover:bg-[#11141d] p-5 rounded-xl text-left transition-all duration-200 flex flex-col group cursor-pointer shadow-md"
                       >
-                        <span className="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-colors mb-1 truncate">{preset.title}</span>
-                        <span className="text-[10px] text-gray-500 truncate">{typeof preset.url === 'string' ? preset.url : 'Master Collection of URLs'}</span>
-                        <div className="mt-4 flex items-center gap-2">
-                           <span className="text-[10px] bg-gray-900 px-2 py-0.5 rounded text-gray-400">{preset.q} Questions</span>
-                           <span className="text-[10px] bg-blue-900/20 px-2 py-0.5 rounded text-blue-400 font-medium ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             Practice Now <Play className="w-2.5 h-2.5" />
+                        <span className="text-sm font-bold text-slate-200 group-hover:text-indigo-400 font-display tracking-tight transition-colors mb-1 truncate">{preset.title}</span>
+                        <span className="text-[10px] text-slate-500 font-mono truncate">{typeof preset.url === 'string' ? preset.url : 'Multi-topic Syllabus Bundle'}</span>
+                        <div className="mt-5 pt-3 border-t border-slate-900 flex items-center gap-2 w-full justify-between">
+                           <span className="text-[9px] bg-indigo-500/10 text-indigo-400 px-2.5 py-0.5 rounded font-mono font-bold tracking-wider uppercase border border-indigo-500/10">{preset.q} Problems</span>
+                           <span className="text-[9px] bg-indigo-600 text-white px-2 py-1 rounded font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-150 transform translate-x-2 group-hover:translate-x-0">
+                             PRACTICE <Play className="w-2 h-2 fill-current" />
                            </span>
                         </div>
                       </button>
@@ -544,45 +579,45 @@ export default function App() {
         {problems && problem && (
           <PanelGroup orientation="horizontal" className="flex-1 w-full relative">
             {/* Sidebar List */}
-            <Panel defaultSize={15} minSize={10} className="flex flex-col bg-[#0d0f14] hidden md:flex shrink-0">
-              <div className="p-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Extracted Exercises</div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 pt-0">
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(35px,1fr))] gap-2">
+            <Panel defaultSize={15} minSize={10} className="flex flex-col bg-[#090b10] border-r border-slate-800/70 hidden md:flex shrink-0">
+              <div className="p-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Core Exercise Map</div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 pt-0">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(35px,1fr))] gap-2.5">
                   {problems.map((prob, i) => {
                     const isPassed = testResults[i] && testResults[i].length === prob.testCases.length && testResults[i].every(r => r.passed);
                     return (
-                      <div 
+                      <button 
                         key={i} 
                         onClick={() => { setCurrentIndex(i); setActiveTab('problem'); }} 
-                        className={cn("flex flex-col items-center justify-center p-2 rounded cursor-pointer transition-colors border aspect-square", 
-                           currentIndex === i ? "bg-blue-600/20 border-blue-500 text-blue-400" : 
-                           isPassed ? "bg-green-900/20 border-green-800 text-green-500" : 
-                           "bg-[#1a1d23] border-gray-700 text-gray-400 hover:bg-gray-800")}
+                        className={cn("flex flex-col items-center justify-center p-2 rounded-xl cursor-pointer transition-all border aspect-square font-mono font-bold text-xs", 
+                           currentIndex === i ? "bg-indigo-600/15 border-indigo-500 text-indigo-300 shadow-md" : 
+                           isPassed ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-400" : 
+                           "bg-slate-900/60 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350")}
                       >
-                         <span className="text-[11px] font-bold">{i + 1}</span>
-                      </div>
+                         <span>{i + 1}</span>
+                      </button>
                     )
                   })}
                 </div>
               </div>
-              <div className="p-3 border-t border-gray-800 text-center relative">
-                <div className={cn("rounded-md p-3 flex flex-col items-center border transition-colors", sessionEnded || timeRemaining === 0 ? "bg-red-900/20 border-red-900/50" : "bg-gray-900 border-gray-800")}>
-                  <span className="flex items-center gap-1 font-bold tracking-tighter text-[10px] text-gray-400 mb-1"><Clock className="w-3 h-3"/> TIME REMAINING</span>
-                  <span className={cn("font-mono text-xl", sessionEnded || timeRemaining === 0 ? "text-red-500 font-bold" : "text-white")}>
+              <div className="p-4 border-t border-slate-800/80 text-center relative bg-slate-900/10">
+                <div className={cn("rounded-xl p-3.5 flex flex-col items-center border transition-all", sessionEnded || timeRemaining === 0 ? "bg-red-950/20 border-red-500/20" : "bg-[#0c0e15] border-slate-800")}>
+                  <span className="flex items-center gap-1 font-bold tracking-wider text-[9px] text-slate-500 mb-1.5 uppercase"><Clock className="w-3.5 h-3.5 text-indigo-400" /> TIME REMAINING</span>
+                  <span className={cn("font-mono text-xl font-bold tracking-tight", sessionEnded || timeRemaining === 0 ? "text-red-400" : "text-white")}>
                      {timeRemaining !== null ? `${Math.floor(timeRemaining / 60).toString().padStart(2, '0')}:${(timeRemaining % 60).toString().padStart(2, '0')}` : '00:00'}
                   </span>
                 </div>
                 {(sessionEnded || timeRemaining === 0) ? (
-                   <div className="mt-2 text-[10px] uppercase text-green-500 font-bold bg-green-900/20 py-2 rounded">Test Submitted</div>
+                   <div className="mt-3 text-[10px] uppercase text-emerald-400 font-bold bg-emerald-500/10 py-2.5 rounded-xl border border-emerald-500/15">Results Evaluated</div>
                 ) : (
                    <button 
                      onClick={() => {
                         setTimeRemaining(0);
                         setSessionEnded(true);
                      }}
-                     className="mt-2 w-full py-2 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors border border-blue-500/50 shadow-lg shadow-blue-900/20"
+                     className="mt-3 w-full py-2.5 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all border border-indigo-500/20 shadow-lg shadow-indigo-600/10 cursor-pointer"
                    >
-                     <Trophy className="w-3.5 h-3.5" /> Submit Test
+                     <Trophy className="w-3.5 h-3.5" /> SUBMIT EXAM
                    </button>
                 )}
               </div>

@@ -30,6 +30,9 @@ import dbWeek2Md from './quizzes/db_week2.md?raw';
 import dbWeek6Md from './quizzes/db_week6.md?raw';
 import dbWeek6Part2Md from './quizzes/db_week6_part2.md?raw';
 import dbWeek7Md from './quizzes/db_week7.md?raw';
+import dbLecture6HashingMd from './quizzes/db_lecture6_hashing.md?raw';
+import dbLecture6HashingHardIitjMd from './quizzes/db_lecture6_hashing_hard_iitj.md?raw';
+import dbLecture7TransactionsMd from './quizzes/db_lecture7_transactions.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -80,5 +83,8 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-week2", dbWeek2Md), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week6", dbWeek6Md), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week6-part2", dbWeek6Part2Md), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week7", dbWeek7Md), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week7", dbWeek7Md), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-lecture6-hashing", dbLecture6HashingMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-lecture6-hashing-hard-iitj", dbLecture6HashingHardIitjMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-lecture7-transactions-concurrency", dbLecture7TransactionsMd), subjectId: 'db' }
 ];

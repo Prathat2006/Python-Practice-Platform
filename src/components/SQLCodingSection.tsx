@@ -25,7 +25,17 @@ const ResizeHandleVertical = () => (
 
 export function SQLCodingSection() {
   const [db, setDb] = useState<any>(null);
-  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
+  
+  // Load selectedQuizId initially from URL search parameter
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    if (m === 'sql') {
+      return params.get('quiz');
+    }
+    return null;
+  });
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [draftCode, setDraftCode] = useState('');
   const [codes, setCodes] = useState<Record<string, string>>({});
@@ -34,6 +44,41 @@ export function SQLCodingSection() {
   const [running, setRunning] = useState(false);
   const [activeRightTab, setActiveRightTab] = useState<'console' | 'schema'>('console');
   const [error, setError] = useState<string | null>(null);
+
+  // Synchronize on browser path/back/forward popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get('mode');
+      if (m === 'sql') {
+        const quiz = params.get('quiz');
+        if (quiz !== selectedQuizId) {
+          setSelectedQuizId(quiz);
+          setCurrentIndex(0);
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedQuizId]);
+
+  // Synchronize selectedQuizId state changes to the URL parameter 'quiz'
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    if (m === 'sql') {
+      const existingQuizId = params.get('quiz');
+      if (existingQuizId !== selectedQuizId) {
+        const url = new URL(window.location.href);
+        if (selectedQuizId) {
+          url.searchParams.set('quiz', selectedQuizId);
+        } else {
+          url.searchParams.delete('quiz');
+        }
+        window.history.pushState({}, '', url.toString());
+      }
+    }
+  }, [selectedQuizId]);
 
   const selectedQuiz = sqlQuizzes.find(q => q.id === selectedQuizId);
   const currentProblems = selectedQuiz?.problems || [];
