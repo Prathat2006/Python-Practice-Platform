@@ -80,7 +80,7 @@ Schema:
   if (llmProvider === 'Google Gemini') {
     const ai = new GoogleGenAI({ apiKey: activeKey });
     const result = await ai.models.generateContent({
-      model: customModel || "gemini-3.1-pro-preview",
+      model: customModel || "gemini-3.5-flash",
       contents: userPrompt,
       config: {
         systemInstruction,
@@ -129,7 +129,7 @@ Schema:
   } else if (llmProvider === 'OpenRouter' || llmProvider === 'NVIDIA NIM') {
     const isNvidia = llmProvider === 'NVIDIA NIM';
     const endpoint = isNvidia ? 'https://integrate.api.nvidia.com/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
-    const modelId = customModel || (isNvidia ? 'meta/llama-3.1-70b-instruct' : 'meta-llama/llama-3.1-70b-instruct');
+    const modelId = customModel || (isNvidia ? 'minimaxai/minimax-m2.7' : 'minimaxai/minimax-m2.7');
     
     const res = await fetch(endpoint, {
       method: 'POST',
