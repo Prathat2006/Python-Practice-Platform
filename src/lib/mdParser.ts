@@ -3,6 +3,7 @@ import type { MCQQuiz, MCQProblem } from './mcqQuizzes';
 export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
   const lines = markdown.split('\n');
   let title = "Quiz";
+  let hasSetTitle = false;
   const questions: MCQProblem[] = [];
   
   let currentDataset: { content: string, start?: number, end?: number } | null = null;
@@ -56,7 +57,10 @@ export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
     }
 
     if (line.startsWith('### ')) {
-      title = line.replace('### ', '').trim();
+      if (!hasSetTitle) {
+        title = line.replace('### ', '').trim();
+        hasSetTitle = true;
+      }
       continue;
     }
 
