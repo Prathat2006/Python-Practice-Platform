@@ -37,6 +37,7 @@ import dbWeek8SerializabilityMd from './quizzes/db_week8_serializability.md?raw'
 import dbWeek9LockingMd from './quizzes/db_week9_locking.md?raw';
 import dbWeek10ConcurrencyMd from './quizzes/db_week10_concurrency.md?raw';
 import dbWeek11RecoveryMd from './quizzes/db_week11_recovery.md?raw';
+import dbWeek12ErModelMd from './quizzes/db_week12_er_model.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -94,5 +95,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-week8-serializability", dbWeek8SerializabilityMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week9-locking", dbWeek9LockingMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week10-concurrency", dbWeek10ConcurrencyMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week11-recovery", dbWeek11RecoveryMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week11-recovery", dbWeek11RecoveryMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-week12-er-model", dbWeek12ErModelMd), subjectId: 'db' }
 ];

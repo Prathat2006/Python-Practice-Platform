@@ -85,7 +85,7 @@ export function MCQSection() {
           return;
         }
 
-        if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2' || quiz.id === 'ml-week11' || quiz.id === 'db-lecture1-intro' || quiz.id === 'db-lecture1-intro-part2' || quiz.id === 'db-graded-quiz-1' || quiz.id === 'db-lecture3-4-5' || quiz.id === 'db-week2' || quiz.id === 'db-week6' || quiz.id === 'db-week6-part2' || quiz.id === 'db-week7' || quiz.id === 'db-lecture6-hashing' || quiz.id === 'db-lecture6-hashing-hard-iitj' || quiz.id === 'db-lecture7-transactions-concurrency' || quiz.id === 'db-week8-serializability' || quiz.id === 'db-week9-locking' || quiz.id === 'db-week10-concurrency' || quiz.id === 'db-week11-recovery') {
+        if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2' || quiz.id === 'ml-week11' || quiz.id === 'db-lecture1-intro' || quiz.id === 'db-lecture1-intro-part2' || quiz.id === 'db-graded-quiz-1' || quiz.id === 'db-lecture3-4-5' || quiz.id === 'db-week2' || quiz.id === 'db-week6' || quiz.id === 'db-week6-part2' || quiz.id === 'db-week7' || quiz.id === 'db-lecture6-hashing' || quiz.id === 'db-lecture6-hashing-hard-iitj' || quiz.id === 'db-lecture7-transactions-concurrency' || quiz.id === 'db-week8-serializability' || quiz.id === 'db-week9-locking' || quiz.id === 'db-week10-concurrency' || quiz.id === 'db-week11-recovery' || quiz.id === 'db-week12-er-model') {
           setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
         } else {
           const groups: MCQProblem[][] = [];
