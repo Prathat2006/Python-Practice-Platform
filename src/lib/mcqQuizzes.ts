@@ -34,6 +34,7 @@ import dbLecture6HashingMd from './quizzes/db_lecture6_hashing.md?raw';
 import dbLecture6HashingHardIitjMd from './quizzes/db_lecture6_hashing_hard_iitj.md?raw';
 import dbLecture7TransactionsMd from './quizzes/db_lecture7_transactions.md?raw';
 import dbWeek8SerializabilityMd from './quizzes/db_week8_serializability.md?raw';
+import dbWeek9LockingMd from './quizzes/db_week9_locking.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -88,5 +89,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-lecture6-hashing", dbLecture6HashingMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-lecture6-hashing-hard-iitj", dbLecture6HashingHardIitjMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-lecture7-transactions-concurrency", dbLecture7TransactionsMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week8-serializability", dbWeek8SerializabilityMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week8-serializability", dbWeek8SerializabilityMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-week9-locking", dbWeek9LockingMd), subjectId: 'db' }
 ];
