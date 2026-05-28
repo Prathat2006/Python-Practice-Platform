@@ -36,6 +36,7 @@ import dbLecture7TransactionsMd from './quizzes/db_lecture7_transactions.md?raw'
 import dbWeek8SerializabilityMd from './quizzes/db_week8_serializability.md?raw';
 import dbWeek9LockingMd from './quizzes/db_week9_locking.md?raw';
 import dbWeek10ConcurrencyMd from './quizzes/db_week10_concurrency.md?raw';
+import dbWeek11RecoveryMd from './quizzes/db_week11_recovery.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -92,5 +93,6 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-lecture7-transactions-concurrency", dbLecture7TransactionsMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week8-serializability", dbWeek8SerializabilityMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week9-locking", dbWeek9LockingMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week10-concurrency", dbWeek10ConcurrencyMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week10-concurrency", dbWeek10ConcurrencyMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-week11-recovery", dbWeek11RecoveryMd), subjectId: 'db' }
 ];
