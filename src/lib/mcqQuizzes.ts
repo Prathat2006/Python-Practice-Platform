@@ -39,6 +39,8 @@ import dbWeek10ConcurrencyMd from './quizzes/db_week10_concurrency.md?raw';
 import dbWeek11RecoveryMd from './quizzes/db_week11_recovery.md?raw';
 import dbWeek12ErModelMd from './quizzes/db_week12_er_model.md?raw';
 import dbWeek13DistributedMd from './quizzes/db_week13_distributed.md?raw';
+import dbMasterQuizMd from './quizzes/master_quiz.md?raw';
+import dbPracticePaperMd from './quizzes/db_practice_paper.md?raw';
 
 export type MCQProblem = {
   question: string;
@@ -98,5 +100,7 @@ export const mcqQuizzes: MCQQuiz[] = [
   { ...parseMarkdownQuiz("db-week10-concurrency", dbWeek10ConcurrencyMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week11-recovery", dbWeek11RecoveryMd), subjectId: 'db' },
   { ...parseMarkdownQuiz("db-week12-er-model", dbWeek12ErModelMd), subjectId: 'db' },
-  { ...parseMarkdownQuiz("db-week13-distributed", dbWeek13DistributedMd), subjectId: 'db' }
+  { ...parseMarkdownQuiz("db-week13-distributed", dbWeek13DistributedMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-master-quiz", dbMasterQuizMd), subjectId: 'db' },
+  { ...parseMarkdownQuiz("db-practice-paper", dbPracticePaperMd), subjectId: 'db' }
 ];

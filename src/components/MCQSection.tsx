@@ -38,6 +38,7 @@ export function MCQSection() {
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const questionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   // Synchronize on browser back/forward navigation
   useEffect(() => {
@@ -290,6 +291,11 @@ export function MCQSection() {
     if (currentQuiz) {
       analyticsService.saveAttempt(currentQuiz.id, score, total);
       setAnalytics(analyticsService.getAnalytics());
+      setTimeout(() => {
+        if (scrollerRef.current) {
+          scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 50);
     }
   };
 
@@ -314,6 +320,11 @@ export function MCQSection() {
     }
     setAnswers({});
     setSubmitted(false);
+    setTimeout(() => {
+      if (scrollerRef.current) {
+        scrollerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }, 50);
   };
 
   const scrollToQuestion = (idx: number) => {
@@ -551,44 +562,45 @@ export function MCQSection() {
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
           {/* Header Bar */}
-          <div className="h-14 shrink-0 flex items-center justify-between px-6 border-b border-slate-800 bg-[#0d1017]/95 shadow-md">
-            <div className="flex items-center gap-4">
+          <div className="h-14 shrink-0 flex items-center justify-between px-3 sm:px-6 border-b border-slate-800 bg-[#0d1017]/95 shadow-md">
+            <div className="flex items-center gap-2 sm:gap-4 select-none">
               <button 
                 onClick={handleBackToQuizzes}
-                className="text-xs font-semibold text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800"
+                className="text-[10px] sm:text-xs font-semibold text-slate-400 hover:text-white transition-colors flex items-center gap-1 bg-slate-900 px-2 sm:px-2.5 py-1.5 rounded-lg border border-slate-800 whitespace-nowrap"
               >
                 ← EXIT
               </button>
               <div className="w-px h-4 bg-slate-800" />
-              <h2 className="text-sm font-bold text-slate-200 font-display tracking-tight leading-none max-w-sm truncate">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-200 font-display tracking-tight leading-none max-w-[90px] xs:max-w-[150px] sm:max-w-xs md:max-w-sm truncate" title={currentQuiz.title}>
                 {currentQuiz.title}
               </h2>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               {currentQuiz.subjectId === 'db' && (
                 <button 
                   onClick={() => setShowSchema(!showSchema)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                    "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all border",
                     showSchema 
                       ? "bg-purple-600 border-purple-500 text-white shadow-lg" 
                       : "bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20"
                   )}
                 >
-                  <Database className="w-3.5 h-3.5" /> SCHEMA REF
+                  <Database className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden xs:inline">SCHEMA REF</span><span className="xs:hidden">REF</span>
                 </button>
               )}
               {submitted && (
-                <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 py-1 px-3 rounded-lg">
-                  <span className="text-xs font-medium text-slate-400">
-                    Grade: <span className={cn("font-bold font-mono text-sm", score > total / 2 ? "text-emerald-400 font-bold" : "text-amber-400 font-bold")}>{score}/{total}</span>
+                <div className="flex items-center gap-1.5 sm:gap-3 bg-slate-900 border border-slate-800 py-1 px-2 sm:px-3 rounded-lg">
+                  <span className="text-[10px] sm:text-xs font-medium text-slate-400">
+                    <span className="hidden sm:inline">Grade: </span>
+                    <span className={cn("font-bold font-mono text-xs sm:text-sm", score > total / 2 ? "text-emerald-400" : "text-amber-400")}>{score}/{total}</span>
                   </span>
                   <button 
                     onClick={handleRetry}
-                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold py-1 px-2.5 rounded transition-colors"
+                    className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] sm:text-[11px] font-bold py-1 px-2 rounded transition-colors"
                   >
-                    <RefreshCcw className="w-3 h-3" /> RETRY
+                    <RefreshCcw className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="hidden xs:inline">RETRY</span>
                   </button>
                 </div>
               )}
@@ -646,7 +658,7 @@ export function MCQSection() {
             </div>
 
             {/* Questions Scroller Panel */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+            <div ref={scrollerRef} className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
               <div className="max-w-3xl mx-auto space-y-8 pb-32 relative">
                 
                 {/* Embedded Schema View if toggled */}
@@ -681,6 +693,138 @@ export function MCQSection() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* 🌟 Beautiful Quiz Results Card (Highly polished, ultra-responsive for mobile/Android screens) 🌟 */}
+                {submitted && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                    className="bg-gradient-to-br from-[#101420] to-[#0c0e16] border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden ring-1 ring-white/5"
+                  >
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
+                    
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 w-full">
+                      {/* Left: General Performance Stats */}
+                      <div className="text-center md:text-left space-y-2">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20 inline-block">
+                          Quiz Evaluated Successfully
+                        </span>
+                        <h3 className="text-2xl sm:text-3.5xl font-extrabold text-white tracking-tight font-display">
+                          Your Performance Report
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-400 max-w-md">
+                          {Math.round((score / total) * 100) >= 90 ? (
+                            "Outstanding Mastery! You have fully grasped the core theoretical concepts and relational mappings."
+                          ) : Math.round((score / total) * 100) >= 70 ? (
+                            "Excellent Job! You have a solid grasp of this conceptual framework with only minor gaps."
+                          ) : Math.round((score / total) * 100) >= 50 ? (
+                            "Good Attempt. Review the explanation statement sections below to consolidate your knowledge."
+                          ) : (
+                            "Novice Explorer. We recommend taking the quiz again after inspecting the explanatory solutions."
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Right: Big Radial Accuracy Meter */}
+                      <div className="flex flex-col items-center justify-center bg-[#080a11] border border-slate-800/80 rounded-2xl p-5 w-40 h-40 shrink-0 shadow-lg relative glow-indigo animate-fade-in">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                          <Trophy className="w-16 h-16 text-indigo-400 animate-pulse" />
+                        </div>
+                        <span className="text-3xl sm:text-4xl font-black font-mono text-indigo-400">
+                          {Math.round((score / total) * 100)}%
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                          Accuracy Rate
+                        </span>
+                        <span className="text-xs font-bold text-slate-200 mt-2 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded font-mono">
+                          {score} / {total} Correct
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* bento stats highlights */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 sm:mt-8 relative z-10">
+                      <div className="bg-[#080a11]/60 border border-slate-800/80 p-3 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Correct
+                        </span>
+                        <span className="text-lg sm:text-l font-bold text-slate-100 mt-1 font-mono">{score}</span>
+                      </div>
+                      
+                      <div className="bg-[#080a11]/60 border border-slate-800/80 p-3 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-400" /> Incorrect
+                        </span>
+                        <span className="text-lg sm:text-l font-bold text-slate-100 mt-1 font-mono">{total - score}</span>
+                      </div>
+
+                      <div className="bg-[#080a11]/60 border border-slate-800/80 p-3 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Unanswered</span>
+                        <span className="text-lg sm:text-l font-bold text-slate-100 mt-1 font-mono">
+                          {total - Object.keys(answers).length}
+                        </span>
+                      </div>
+
+                      <div className="bg-[#080a11]/60 border border-slate-800/80 p-3 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-[9px] font-bold text-purple-400 uppercase tracking-wider">Assessment</span>
+                        <span className="text-[10px] font-bold text-purple-400 mt-2 tracking-wide uppercase font-display truncate w-full text-center">
+                          {Math.round((score / total) * 100) >= 90 ? "Master" : 
+                           Math.round((score / total) * 100) >= 70 ? "Expert" : 
+                           Math.round((score / total) * 100) >= 50 ? "Competent" : "Novice"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Question Picker Miniature Grid (Particularly helpful on mobile/Android devices!) */}
+                    <div className="mt-6 pt-5 border-t border-slate-800/50 relative z-10">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-3 text-center md:text-left font-mono">
+                        Question Matrix: Tap any question box to review details
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 justify-center md:justify-start">
+                        {currentQuiz.questions.map((_, idx) => {
+                          const isCorrectAns = isCorrect(idx);
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => scrollToQuestion(idx)}
+                              className={cn(
+                                "w-10 h-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold font-mono transition-all border cursor-pointer hover:scale-105 active:scale-95",
+                                isCorrectAns
+                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50"
+                                  : "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50"
+                              )}
+                              title={`Question ${idx + 1}: ${isCorrectAns ? 'Correct' : 'Incorrect'}`}
+                            >
+                              <span>#{idx + 1}</span>
+                              <span className="text-[8px] leading-tight font-sans mt-0.5">
+                                {isCorrectAns ? '✔' : '✘'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Action Panel */}
+                    <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 w-full relative z-10">
+                      <button
+                        onClick={handleRetry}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all shadow-lg active:scale-98 cursor-pointer uppercase tracking-wider font-display"
+                      >
+                        <RefreshCcw className="w-4 h-4" /> RETRY THIS QUIZ
+                      </button>
+                      <button
+                        onClick={handleBackToQuizzes}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold text-xs px-6 py-3 rounded-xl transition-all active:scale-98 cursor-pointer uppercase tracking-wider font-display"
+                      >
+                        BACK TO QUIZ CATALOG
+                      </button>
+                    </div>
+                  </motion.div>
                 )}
 
                 {/* Question List Map */}
