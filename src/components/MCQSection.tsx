@@ -15,6 +15,18 @@ import remarkGfm from 'remark-gfm';
 import { analyticsService, type UserAnalytics } from '../lib/analyticsService';
 import { motion, AnimatePresence } from 'motion/react';
 
+const shouldNotShuffle = (quizId: string) => {
+  const nonShuffled = [
+    'ml-quiz1-practice', 'ml-quiz-1', 'ml-100-questions', 'ml-quiz2', 'ml-week11',
+    'db-lecture1-intro', 'db-lecture1-intro-part2', 'db-graded-quiz-1', 'db-lecture3-4-5',
+    'db-week2', 'db-week6', 'db-week6-part2', 'db-week7', 'db-lecture6-hashing',
+    'db-lecture6-hashing-hard-iitj', 'db-lecture7-transactions-concurrency',
+    'db-week8-serializability', 'db-week9-locking', 'db-week10-concurrency',
+    'db-week11-recovery', 'db-week12-er-model', 'db-week13-distributed', 'db-practice-paper'
+  ];
+  return nonShuffled.includes(quizId);
+};
+
 export function MCQSection() {
   // Load activeQuizId initially from URL search parameter
   const [activeQuizId, setActiveQuizId] = useState<string | null>(() => {
@@ -28,7 +40,7 @@ export function MCQSection() {
 
   const [currentQuiz, setCurrentQuiz] = useState<MCQQuiz | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Record<number, number | number[] | string>>({});
+  const [answers, setAnswers] = useState<Record<number, number | number[] | string | string[]>>({});
   const [submitted, setSubmitted] = useState(false);
   const [customQuizzes, setCustomQuizzes] = useState<MCQQuiz[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -86,7 +98,7 @@ export function MCQSection() {
           return;
         }
 
-        if (quiz.id === 'ml-quiz1-practice' || quiz.id === 'ml-quiz-1' || quiz.id === 'ml-100-questions' || quiz.id === 'ml-quiz2' || quiz.id === 'ml-week11' || quiz.id === 'db-lecture1-intro' || quiz.id === 'db-lecture1-intro-part2' || quiz.id === 'db-graded-quiz-1' || quiz.id === 'db-lecture3-4-5' || quiz.id === 'db-week2' || quiz.id === 'db-week6' || quiz.id === 'db-week6-part2' || quiz.id === 'db-week7' || quiz.id === 'db-lecture6-hashing' || quiz.id === 'db-lecture6-hashing-hard-iitj' || quiz.id === 'db-lecture7-transactions-concurrency' || quiz.id === 'db-week8-serializability' || quiz.id === 'db-week9-locking' || quiz.id === 'db-week10-concurrency' || quiz.id === 'db-week11-recovery' || quiz.id === 'db-week12-er-model' || quiz.id === 'db-week13-distributed') {
+        if (shouldNotShuffle(quiz.id)) {
           setCurrentQuiz({ ...quiz, questions: [...quiz.questions] });
         } else {
           const groups: MCQProblem[][] = [];
@@ -236,9 +248,10 @@ export function MCQSection() {
       if (isMultiple) {
         let newSelection: number[];
         if (Array.isArray(current)) {
-          newSelection = current.includes(oIndex) 
-            ? current.filter(i => i !== oIndex) 
-            : [...current, oIndex].sort();
+          const numArr = current as any[] as number[];
+          newSelection = numArr.includes(oIndex) 
+            ? numArr.filter(i => i !== oIndex) 
+            : [...numArr, oIndex].sort((a, b) => a - b);
         } else {
           newSelection = [oIndex];
         }
@@ -261,8 +274,35 @@ export function MCQSection() {
     const answered = answers[qIndex];
 
     if (q.type === 'text') {
+      const expectedText = q.correctText || "";
+      if (expectedText.includes(';')) {
+        const expectedSlots = expectedText.split(';').map(s => s.toLowerCase().trim());
+        
+        let actualSlots: string[] = [];
+        if (Array.isArray(answered)) {
+          actualSlots = answered.map(s => String(s).toLowerCase().trim());
+        } else if (typeof answered === 'string') {
+          actualSlots = answered.split(';').map(s => s.toLowerCase().trim());
+        } else {
+          return false;
+        }
+
+        if (actualSlots.length !== expectedSlots.length) return false;
+        
+        return expectedSlots.every((expectedSlot, idx) => {
+          const actualSlot = actualSlots[idx] || "";
+          
+          const expectedNum = parseFloat(expectedSlot);
+          const actualNum = parseFloat(actualSlot);
+          if (!isNaN(expectedNum) && !isNaN(actualNum)) {
+            return Math.abs(expectedNum - actualNum) < 0.005;
+          }
+          return expectedSlot === actualSlot;
+        });
+      }
+
       if (typeof answered !== 'string') return false;
-      const expected = q.correctText?.toLowerCase().trim() || "";
+      const expected = expectedText.toLowerCase().trim();
       const actual = (answered as string).toLowerCase().trim();
       
       const expectedNum = parseFloat(expected);
@@ -314,8 +354,12 @@ export function MCQSection() {
     if (currentQuiz) {
       const originalQuiz = [...mcqQuizzes, ...customQuizzes].find(q => q.id === activeQuizId);
       if (originalQuiz) {
-        const shuffled = [...originalQuiz.questions].sort(() => Math.random() - 0.5);
-        setCurrentQuiz({ ...originalQuiz, questions: shuffled });
+        if (shouldNotShuffle(originalQuiz.id)) {
+          setCurrentQuiz({ ...originalQuiz, questions: [...originalQuiz.questions] });
+        } else {
+          const shuffled = [...originalQuiz.questions].sort(() => Math.random() - 0.5);
+          setCurrentQuiz({ ...originalQuiz, questions: shuffled });
+        }
       }
     }
     setAnswers({});
@@ -617,7 +661,13 @@ export function MCQSection() {
               <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 <div className="grid grid-cols-4 gap-2">
                   {currentQuiz.questions.map((_, idx) => {
-                    const hasAns = answers[idx] !== undefined && (Array.isArray(answers[idx]) ? (answers[idx] as number[]).length > 0 : true);
+                    const hasAns = answers[idx] !== undefined && (
+                      Array.isArray(answers[idx])
+                        ? typeof (answers[idx] as any)[0] === 'string'
+                          ? (answers[idx] as any as string[]).some(val => val.trim().length > 0)
+                          : (answers[idx] as any as number[]).length > 0
+                        : String(answers[idx]).trim().length > 0
+                    );
                     const isCorrectAns = submitted ? isCorrect(idx) : false;
                     
                     return (
@@ -829,7 +879,13 @@ export function MCQSection() {
 
                 {/* Question List Map */}
                 {currentQuiz.questions.map((q, qIndex) => {
-                  const hasAnswered = answers[qIndex] !== undefined && (Array.isArray(answers[qIndex]) ? (answers[qIndex] as number[]).length > 0 : true);
+                  const hasAnswered = answers[qIndex] !== undefined && (
+                    Array.isArray(answers[qIndex])
+                      ? typeof (answers[qIndex] as any)[0] === 'string'
+                        ? (answers[qIndex] as any as string[]).some(val => val.trim().length > 0)
+                        : (answers[qIndex] as any as number[]).length > 0
+                      : String(answers[qIndex]).trim().length > 0
+                  );
                   const correct = submitted ? isCorrect(qIndex) : false;
                   const prevQ = currentQuiz.questions[qIndex - 1];
                   const showDataset = q.dataset && (!prevQ || prevQ.dataset !== q.dataset);
@@ -891,35 +947,113 @@ export function MCQSection() {
 
                       {/* Answer Entry Block */}
                       {q.type === 'text' ? (
-                        <div className="space-y-4">
-                          <input
-                            type="text"
-                            className={cn(
-                              "w-full bg-[#08090d] border border-slate-800 text-sm rounded-xl p-4 focus:ring-2 focus:ring-indigo-500/20 text-slate-200 transition-all shadow-inner placeholder-slate-600 font-mono",
-                              submitted && (isCorrect(qIndex) ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-300" : "border-red-500/40 bg-red-500/5 text-red-300")
-                            )}
-                            placeholder="Type numerical value or exact string match..."
-                            value={typeof answers[qIndex] === 'string' ? (answers[qIndex] as string) : ""}
-                            onChange={(e) => handleTextAnswer(qIndex, e.target.value)}
-                            disabled={submitted}
-                          />
+                        (() => {
+                          const correctTextStr = q.correctText || "";
+                          const isMultiBlank = correctTextStr.includes(';');
                           
-                          {submitted && (
-                            <div className={cn(
-                              "flex items-center gap-3 p-4 rounded-xl text-xs border font-mono",
-                              isCorrect(qIndex) ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300" : "bg-red-500/5 border-red-500/20 text-red-300"
-                            )}>
-                              <span className="text-slate-500 font-bold">EXPLICIT ANSWER EXPECTED:</span>
-                              <span className="font-bold underline decoration-indigo-400">{q.correctText}</span>
+                          if (isMultiBlank) {
+                            const expectedSlots = correctTextStr.split(';');
+                            const slotsCount = expectedSlots.length;
+                            const answeredArray: string[] = Array.isArray(answers[qIndex]) 
+                              ? (answers[qIndex] as any as string[]) 
+                              : typeof answers[qIndex] === 'string'
+                                ? (answers[qIndex] as string).split(';').map(s => s.trim())
+                                : new Array(slotsCount).fill("");
+                            
+                            return (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-2">
+                                  {expectedSlots.map((slot, sIdx) => {
+                                    const val = answeredArray[sIdx] || "";
+                                    const actualSlot = val.toLowerCase().trim();
+                                    const expectedSlot = slot.toLowerCase().trim();
+                                    const isSlotCorrect = (() => {
+                                      const expectedNum = parseFloat(expectedSlot);
+                                      const actualNum = parseFloat(actualSlot);
+                                      if (!isNaN(expectedNum) && !isNaN(actualNum)) {
+                                        return Math.abs(expectedNum - actualNum) < 0.005;
+                                      }
+                                      return expectedSlot === actualSlot;
+                                    })();
+                                    
+                                    return (
+                                      <div key={sIdx} className="space-y-1.5 flex-1">
+                                        <label className="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-wider block">
+                                          BLANK {sIdx + 1}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          className={cn(
+                                            "w-full bg-[#08090d] border border-slate-800 text-sm rounded-xl p-4 focus:ring-2 focus:ring-indigo-500/20 text-slate-200 transition-all shadow-inner placeholder-slate-600 font-mono",
+                                            submitted && (isSlotCorrect ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-300" : "border-red-500/40 bg-red-500/5 text-red-300")
+                                          )}
+                                          placeholder={`Answer for blank ${sIdx + 1}...`}
+                                          value={val}
+                                          onChange={(e) => {
+                                            if (submitted) return;
+                                            const newArr = [...answeredArray];
+                                            while (newArr.length < slotsCount) newArr.push("");
+                                            newArr[sIdx] = e.target.value;
+                                            setAnswers(prev => ({ ...prev, [qIndex]: newArr }));
+                                          }}
+                                          disabled={submitted}
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                
+                                {submitted && (
+                                  <div className={cn(
+                                    "flex flex-col gap-2.5 p-4 rounded-xl text-xs border font-mono bg-[#08090d]/80 border-slate-800/80"
+                                  )}>
+                                    <span className="text-slate-550 font-bold block uppercase tracking-wider text-[10px]">EXPLICIT ANSWERS EXPECTED:</span>
+                                    <div className="flex flex-col gap-2 pl-3 border-l-2 border-indigo-500/30">
+                                      {expectedSlots.map((slot, sIdx) => (
+                                        <div key={sIdx} className="flex gap-2 items-center text-xs">
+                                          <span className="text-slate-400 font-bold">Blank {sIdx + 1}:</span>
+                                          <span className="font-bold underline decoration-indigo-400/40 text-slate-200">{slot.trim()}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div className="space-y-4">
+                              <input
+                                type="text"
+                                className={cn(
+                                  "w-full bg-[#08090d] border border-slate-800 text-sm rounded-xl p-4 focus:ring-2 focus:ring-indigo-500/20 text-slate-200 transition-all shadow-inner placeholder-slate-600 font-mono",
+                                  submitted && (isCorrect(qIndex) ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-300" : "border-red-500/40 bg-red-500/5 text-red-300")
+                                )}
+                                placeholder="Type numerical value or exact string match..."
+                                value={typeof answers[qIndex] === 'string' ? (answers[qIndex] as string) : ""}
+                                onChange={(e) => handleTextAnswer(qIndex, e.target.value)}
+                                disabled={submitted}
+                              />
+                              
+                              {submitted && (
+                                <div className={cn(
+                                  "flex items-center gap-3 p-4 rounded-xl text-xs border font-mono",
+                                  isCorrect(qIndex) ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300" : "bg-red-500/5 border-red-500/20 text-red-300"
+                                )}>
+                                  <span className="text-slate-550 font-bold">EXPLICIT ANSWER EXPECTED:</span>
+                                  <span className="font-bold underline decoration-indigo-400">{q.correctText}</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()
                       ) : (
                         // Standard Selection list (Single / MSQ)
                         <div className="space-y-2.5">
                           {q.options.map((opt, oIndex) => {
                             const ans = answers[qIndex];
-                            const isSelected = Array.isArray(ans) ? ans.includes(oIndex) : ans === oIndex;
+                            const isSelected = Array.isArray(ans) ? (ans as any[]).includes(oIndex) : ans === oIndex;
                             const isOptionCorrect = Array.isArray(q.correctOptionIndex) 
                               ? (q.correctOptionIndex as number[]).includes(oIndex) 
                               : q.correctOptionIndex === oIndex;
