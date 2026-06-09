@@ -35,14 +35,28 @@ export function parseMarkdownQuiz(id: string, markdown: string): MCQQuiz {
       }
     }
 
+    let finalCorrectText = correctText;
+    let finalCorrectIndex = correctIndex;
+    
+    if (options.length === 0) {
+      if (finalCorrectText === null && finalCorrectIndex !== null) {
+        if (Array.isArray(finalCorrectIndex)) {
+          finalCorrectText = finalCorrectIndex.map(idx => String.fromCharCode(65 + idx)).join(', ');
+        } else {
+          finalCorrectText = String.fromCharCode(65 + finalCorrectIndex);
+        }
+        finalCorrectIndex = null;
+      }
+    }
+
     questions.push({
       question: qText,
       options: [...options],
-      correctOptionIndex: correctIndex ?? undefined,
-      correctText: correctText ?? undefined,
+      correctOptionIndex: finalCorrectIndex ?? undefined,
+      correctText: finalCorrectText ?? undefined,
       explanation: explanation.trim(),
       isMultipleChoice,
-      type: correctText !== null ? 'text' : 'mcq',
+      type: finalCorrectText !== null ? 'text' : 'mcq',
       dataset: datasetToApply
     });
   };
